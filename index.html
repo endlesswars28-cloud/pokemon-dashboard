@@ -796,8 +796,8 @@
       <canvas id="salesChart"></canvas>
     </div>
     <div class="chart-card">
-      <div class="section-title">💰 ราคาเฉลี่ยตามประเภท Rarity</div>
-      <canvas id="rarityPriceChart"></canvas>
+      <div class="section-title">🚀 20 การ์ดแนวโน้มขึ้น — ควรเก็บก่อนราคาพุ่ง</div>
+      <canvas id="rarityPriceChart" style="max-height:480px;"></canvas>
     </div>
     <div class="chart-card">
       <div class="section-title">💎 10 อันดับการ์ดราคาสูงสุด (฿)</div>
@@ -3007,21 +3007,60 @@ function renderSalesCharts() {
       scales:{ x:{ticks:{color:'#888',font:{size:10}}}, y:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.05)'}} } }
   });
 
-  // Rarity Price Chart
-  const rarityGroups = {};
-  cards.forEach(c => { if(!rarityGroups[c.rarity]) rarityGroups[c.rarity]=[]; rarityGroups[c.rarity].push(c.price); });
-  const rarityOrder = ['UR','SAR','SR','AR','RR','R'];
-  const rarityAvg = rarityOrder.map(r => rarityGroups[r] ? Math.round(rarityGroups[r].reduce((a,b)=>a+b,0)/rarityGroups[r].length) : 0);
+  // 20 การ์ดแนวโน้มขึ้น — เรียงตาม trend % จากมากไปน้อย
+  function parseTrend(t) { return parseFloat((t||'0%').replace('%','')) || 0; }
+  const watchList = [...cards]
+    .filter(c => parseTrend(c.trend) > 0)
+    .sort((a,b) => parseTrend(b.trend) - parseTrend(a.trend))
+    .slice(0, 20);
+  // ถ้าการ์ด trend > 0 มีน้อยกว่า 20 ใบ เติมจาก flat cards เรียงตามราคา
+  if (watchList.length < 20) {
+    const flat = [...cards]
+      .filter(c => parseTrend(c.trend) === 0)
+      .sort((a,b) => b.price - a.price)
+      .slice(0, 20 - watchList.length);
+    watchList.push(...flat);
+  }
+  const watchColors = watchList.map(c => {
+    const t = parseTrend(c.trend);
+    if (t >= 10) return '#ef4444';       // ขึ้นแรงมาก — แดง
+    if (t >= 5)  return '#f97316';       // ขึ้นปานกลาง — ส้ม
+    if (t >= 1)  return '#FFCB05';       // ขึ้นนิดหน่อย — เหลือง
+    return '#3498db';                    // ทรงตัว — ฟ้า
+  });
   new Chart(document.getElementById('rarityPriceChart'), {
     type: 'bar',
     data: {
-      labels: rarityOrder,
-      datasets: [{ label: 'ราคาเฉลี่ย (฿)', data: rarityAvg,
-        backgroundColor: ['#f0abfc','#67e8f9','#c084fc','#86efac','#fbbf24','#f87171'],
-        borderRadius: 6 }]
+      labels: watchList.map(c => c.name.length > 20 ? c.name.slice(0,19)+'…' : c.name),
+      datasets: [{
+        label: 'ราคาปัจจุบัน (฿)',
+        data: watchList.map(c => c.price),
+        backgroundColor: watchColors,
+        borderRadius: 5,
+      }]
     },
-    options: { responsive:true, plugins:{legend:{display:false}},
-      scales:{ x:{ticks:{color:'#888'}}, y:{ticks:{color:'#888',callback:v=>'฿'+v.toLocaleString()},grid:{color:'rgba(255,255,255,0.05)'}} } }
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ฿' + ctx.raw.toLocaleString(),
+            afterLabel: ctx => {
+              const c = watchList[ctx.dataIndex];
+              const t = parseTrend(c.trend);
+              const emoji = t >= 10 ? '🔥' : t >= 5 ? '📈' : t >= 1 ? '↗️' : '➡️';
+              return `  ${emoji} เทรนด์: ${c.trend||'0%'}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks:{ color:'#888', callback: v=>'฿'+v.toLocaleString() }, grid:{ color:'rgba(255,255,255,0.05)' } },
+        y: { ticks:{ color:'#ddd', font:{ size:10 } } }
+      }
+    }
   });
 
   // Trend Chart (เมก้าดาร์กไรex MUR price 6 months estimated)
