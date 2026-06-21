@@ -796,35 +796,33 @@
       <canvas id="salesChart"></canvas>
     </div>
     <div class="chart-card">
-      <div class="section-title">🚀 20 การ์ดแนวโน้มขึ้น — ควรเก็บก่อนราคาพุ่ง</div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;margin-top:4px;">
-        <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;">
-          <div style="width:14px;height:14px;border-radius:3px;background:#ef4444;flex-shrink:0;"></div>
-          <span style="color:#ccc;">ขึ้น ≥ 10% 🔥 เร่งด่วน</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;">
-          <div style="width:14px;height:14px;border-radius:3px;background:#f97316;flex-shrink:0;"></div>
-          <span style="color:#ccc;">ขึ้น ≥ 5% 📈 แรง</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;">
-          <div style="width:14px;height:14px;border-radius:3px;background:#FFCB05;flex-shrink:0;"></div>
-          <span style="color:#ccc;">ขึ้น ≥ 1% ↗️ เบาๆ</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;">
-          <div style="width:14px;height:14px;border-radius:3px;background:#3498db;flex-shrink:0;"></div>
-          <span style="color:#ccc;">ทรงตัว ➡️ รอดู</span>
-        </div>
-      </div>
-      <canvas id="rarityPriceChart" style="max-height:480px;"></canvas>
-    </div>
-    <div class="chart-card">
       <div class="section-title">💎 10 อันดับการ์ดราคาสูงสุด (฿)</div>
       <canvas id="trendChart"></canvas>
     </div>
-    <div class="chart-card">
-      <div class="section-title">🎯 สัดส่วนยอดขายตามประเภท</div>
-      <canvas id="typeChart"></canvas>
+  </div>
+
+  <!-- ชาร์ทแนวโน้มเต็มความกว้าง -->
+  <div class="chart-card" style="margin-bottom:25px;">
+    <div class="section-title">🚀 20 การ์ดแนวโน้มขึ้น — ควรเก็บก่อนราคาพุ่ง</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;margin-top:4px;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;">
+        <div style="width:14px;height:14px;border-radius:3px;background:#ef4444;flex-shrink:0;"></div>
+        <span style="color:#ccc;">ขึ้น ≥ 10% 🔥 เร่งด่วน</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;">
+        <div style="width:14px;height:14px;border-radius:3px;background:#f97316;flex-shrink:0;"></div>
+        <span style="color:#ccc;">ขึ้น ≥ 5% 📈 แรง</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;">
+        <div style="width:14px;height:14px;border-radius:3px;background:#FFCB05;flex-shrink:0;"></div>
+        <span style="color:#ccc;">ขึ้น ≥ 1% ↗️ เบาๆ</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.78rem;">
+        <div style="width:14px;height:14px;border-radius:3px;background:#3498db;flex-shrink:0;"></div>
+        <span style="color:#ccc;">ทรงตัว ➡️ รอดู</span>
+      </div>
     </div>
+    <canvas id="rarityPriceChart" style="max-height:600px;"></canvas>
   </div>
 
   <div class="section-title">🥇 อันดับการ์ดขายดี</div>
@@ -3119,22 +3117,6 @@ function renderSalesCharts() {
     }
   });
 
-  // Type Donut Chart
-  const typeCount = {};
-  cards.forEach(c => { typeCount[c.type] = (typeCount[c.type]||0) + c.sold; });
-  const typeEntries = Object.entries(typeCount).sort((a,b)=>b[1]-a[1]);
-  const typeColors = { fire:'#e74c3c', water:'#3498db', psychic:'#9b59b6', electric:'#f1c40f', dark:'#2c3e50', colorless:'#95a5a6', dragon:'#1a5276', steel:'#7f8c8d', grass:'#27ae60', fighting:'#a04000' };
-  const typeLabels2 = { fire:'🔥 ไฟ', water:'💧 น้ำ', psychic:'🔮 จิต', electric:'⚡ ไฟฟ้า', dark:'🌑 มืด', colorless:'◯ ไม่มีสี', dragon:'🐉 มังกร', steel:'⚙️ เหล็ก', grass:'🌿 หญ้า', fighting:'🥊 ต่อสู้' };
-  new Chart(document.getElementById('typeChart'), {
-    type: 'doughnut',
-    data: {
-      labels: typeEntries.map(([t]) => typeLabels2[t]||t),
-      datasets: [{ data: typeEntries.map(([,v])=>v),
-        backgroundColor: typeEntries.map(([t]) => typeColors[t]||'#aaa'),
-        borderWidth: 2, borderColor: '#16213e' }]
-    },
-    options: { responsive:true, plugins:{legend:{labels:{color:'#ccc',font:{size:11}},position:'bottom'}} }
-  });
 }
 
 // =====================================================================
