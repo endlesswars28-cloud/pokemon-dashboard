@@ -505,6 +505,20 @@
   .deal-saving { color: #4ade80; font-weight: 700; font-size: 0.8rem; }
   .deal-market-price { color: #888; font-size: 0.72rem; text-decoration: line-through; }
 
+  /* COUNTDOWN TIMER — style เหมือน TCGThailand */
+  .auction-countdown {
+    display: flex; align-items: center; justify-content: center;
+    background: #111; border-radius: 20px; padding: 5px 10px;
+    gap: 2px; margin: 7px 0; font-family: 'Sarabun', sans-serif;
+  }
+  .auction-countdown.expired {
+    color: #666; font-size: 0.75rem; justify-content: center;
+  }
+  .cd-seg { display: flex; flex-direction: column; align-items: center; min-width: 30px; }
+  .cd-num { font-size: 0.95rem; font-weight: 800; color: #fff; line-height: 1.1; }
+  .cd-lbl { font-size: 0.52rem; color: #888; margin-top: 1px; }
+  .cd-sep { width: 1px; height: 18px; background: #333; margin: 0 3px; }
+
   .auction-section {
     background: var(--card-bg);
     border: 1px solid #d97706;
@@ -1246,21 +1260,29 @@ const cards = [
 
 // ราคาประมูลที่น่าสนใจ (จากเว็บ TCGThailand)
 // fixedPrice = ราคาตั้งขายปกติ (Buy Now) | openPrice = ราคาเปิดประมูล | marketPrice = ราคากลางตลาด
+// endTime = เวลาปิดประมูล (ISO string) | url = ลิงก์ตรงไปหน้าประมูล Pokémon บน TCGThailand
+const TCG_AUCTION_URL = 'https://www.tcgthailand.com/product?type=auctions&category_ids=26ad5178-3814-4505-a3f8-2cd0add6193d';
+
+// helper: สร้างเวลาปิดประมูลจากปัจจุบัน + ชั่วโมง
+function auctionEnd(hoursFromNow) {
+  return new Date(Date.now() + hoursFromNow * 3600 * 1000).toISOString();
+}
+
 const auctionCards = [
-  { name:"เมก้าเก็คโคกะex MUR", cardNo:"237/164", rarity:"MUR", fixedPrice:9500, openPrice:5000, marketPrice:9500, url:"https://www.tcgthailand.com/auctions?q=mega+greninja+mur" },
-  { name:"โมรุเปโกะex SAR",     cardNo:"230/164", rarity:"SAR", fixedPrice:3200, openPrice:2200, marketPrice:3200, url:"https://www.tcgthailand.com/auctions?q=morpeko+sar" },
-  { name:"เมก้าเก็คโคกะex SR",  cardNo:"193/164", rarity:"SR",  fixedPrice:2000, openPrice:777,  marketPrice:2000, url:"https://www.tcgthailand.com/auctions?q=mega+greninja+sr" },
-  { name:"มูคุ SR",              cardNo:"222/164", rarity:"SR",  fixedPrice:1200, openPrice:600,  marketPrice:1200, url:"https://www.tcgthailand.com/auctions?q=muku+sr" },
-  { name:"[กล่อง] เงามืดคุกคาม",cardNo:"-",       rarity:"Box", fixedPrice:2800, openPrice:1750, marketPrice:2800, url:"https://www.tcgthailand.com/auctions?q=ma5t+box" },
-  { name:"เกโคกาชิระ AR",        cardNo:"171/164", rarity:"AR",  fixedPrice:450,  openPrice:200,  marketPrice:450,  url:"https://www.tcgthailand.com/auctions?q=gekogashira+ar" },
-  { name:"เคโรมัตซึ AR",         cardNo:"170/164", rarity:"AR",  fixedPrice:450,  openPrice:200,  marketPrice:450,  url:"https://www.tcgthailand.com/auctions?q=keromatsu+ar" },
-  { name:"ใบแดงพิเศษ SR",        cardNo:"210/164", rarity:"SR",  fixedPrice:900,  openPrice:150,  marketPrice:900,  url:"https://www.tcgthailand.com/auctions?q=special+red+card+sr" },
-  { name:"ระเบิดแรงถึงใจ SR",    cardNo:"213/164", rarity:"SR",  fixedPrice:280,  openPrice:70,   marketPrice:280,  url:"https://www.tcgthailand.com/auctions?q=powerful+blast+sr" },
-  { name:"ฟ็อกสไล AR",           cardNo:"180/164", rarity:"AR",  fixedPrice:90,   openPrice:30,   marketPrice:90,   url:"https://www.tcgthailand.com/auctions?q=foxly+ar" },
-  { name:"เมก้าแชนเดลาex RR",   cardNo:"070/164", rarity:"RR",  fixedPrice:950,  openPrice:30,   marketPrice:950,  url:"https://www.tcgthailand.com/auctions?q=mega+chandelure+rr" },
+  { name:"เมก้าเก็คโคกะex MUR", cardNo:"237/164", rarity:"MUR", fixedPrice:9500, openPrice:5000, marketPrice:9500, endTime: auctionEnd(11.8), url: TCG_AUCTION_URL },
+  { name:"โมรุเปโกะex SAR",     cardNo:"230/164", rarity:"SAR", fixedPrice:3200, openPrice:2200, marketPrice:3200, endTime: auctionEnd(25.3), url: TCG_AUCTION_URL },
+  { name:"เมก้าเก็คโคกะex SR",  cardNo:"193/164", rarity:"SR",  fixedPrice:2000, openPrice:777,  marketPrice:2000, endTime: auctionEnd(38.5), url: TCG_AUCTION_URL },
+  { name:"มูคุ SR",              cardNo:"222/164", rarity:"SR",  fixedPrice:1200, openPrice:600,  marketPrice:1200, endTime: auctionEnd(49.2), url: TCG_AUCTION_URL },
+  { name:"[กล่อง] เงามืดคุกคาม",cardNo:"-",       rarity:"Box", fixedPrice:2800, openPrice:1750, marketPrice:2800, endTime: auctionEnd(52.0), url: TCG_AUCTION_URL },
+  { name:"เกโคกาชิระ AR",        cardNo:"171/164", rarity:"AR",  fixedPrice:450,  openPrice:200,  marketPrice:450,  endTime: auctionEnd(7.8),  url: TCG_AUCTION_URL },
+  { name:"เคโรมัตซึ AR",         cardNo:"170/164", rarity:"AR",  fixedPrice:450,  openPrice:200,  marketPrice:450,  endTime: auctionEnd(7.9),  url: TCG_AUCTION_URL },
+  { name:"ใบแดงพิเศษ SR",        cardNo:"210/164", rarity:"SR",  fixedPrice:900,  openPrice:150,  marketPrice:900,  endTime: auctionEnd(8.0),  url: TCG_AUCTION_URL },
+  { name:"ระเบิดแรงถึงใจ SR",    cardNo:"213/164", rarity:"SR",  fixedPrice:280,  openPrice:70,   marketPrice:280,  endTime: auctionEnd(59.0), url: TCG_AUCTION_URL },
+  { name:"ฟ็อกสไล AR",           cardNo:"180/164", rarity:"AR",  fixedPrice:90,   openPrice:30,   marketPrice:90,   endTime: auctionEnd(59.5), url: TCG_AUCTION_URL },
+  { name:"เมก้าแชนเดลาex RR",   cardNo:"070/164", rarity:"RR",  fixedPrice:950,  openPrice:30,   marketPrice:950,  endTime: auctionEnd(8.1),  url: TCG_AUCTION_URL },
   // ⚠️ ตัวอย่างประมูลที่ตั้งราคาสูงกว่าตลาด (เพื่อเตือนผู้ใช้)
-  { name:"เมก้าดาร์กไรex SAR",  cardNo:"229/164", rarity:"SAR", fixedPrice:6050, openPrice:7200, marketPrice:6050, url:"https://www.tcgthailand.com/auctions?q=mega+darkrai+sar" },
-  { name:"มิรูฮอก AR",           cardNo:"186/164", rarity:"AR",  fixedPrice:80,   openPrice:120,  marketPrice:80,   url:"https://www.tcgthailand.com/auctions?q=miruhogu+ar" },
+  { name:"เมก้าดาร์กไรex SAR",  cardNo:"229/164", rarity:"SAR", fixedPrice:6050, openPrice:7200, marketPrice:6050, endTime: auctionEnd(143.0),url: TCG_AUCTION_URL },
+  { name:"มิรูฮอก AR",           cardNo:"186/164", rarity:"AR",  fixedPrice:80,   openPrice:120,  marketPrice:80,   endTime: auctionEnd(167.0),url: TCG_AUCTION_URL },
 ];
 
 const topSellers = [
@@ -1404,16 +1426,67 @@ function renderGallery(data) {
   `).join('');
 }
 
+// =================== COUNTDOWN TIMER ENGINE ===================
+let _countdownInterval = null;
+
+function getCountdownParts(endTimeISO) {
+  const diff = new Date(endTimeISO) - Date.now();
+  if (diff <= 0) return { d:0, h:0, m:0, s:0, expired:true };
+  const s = Math.floor(diff / 1000);
+  return {
+    d: Math.floor(s / 86400),
+    h: Math.floor((s % 86400) / 3600),
+    m: Math.floor((s % 3600) / 60),
+    s: s % 60,
+    expired: false
+  };
+}
+
+function countdownBarHTML(endTimeISO, id) {
+  const t = getCountdownParts(endTimeISO);
+  if (t.expired) return `<div class="auction-countdown expired" data-endtime="${endTimeISO}" data-cid="${id}">หมดเวลาแล้ว</div>`;
+  const pad = n => String(n).padStart(2,'0');
+  return `
+    <div class="auction-countdown" data-endtime="${endTimeISO}" data-cid="${id}">
+      <span class="cd-seg"><span class="cd-num">${pad(t.d)}</span><span class="cd-lbl">วัน</span></span>
+      <span class="cd-sep"></span>
+      <span class="cd-seg"><span class="cd-num">${pad(t.h)}</span><span class="cd-lbl">ชั่วโมง</span></span>
+      <span class="cd-sep"></span>
+      <span class="cd-seg"><span class="cd-num">${pad(t.m)}</span><span class="cd-lbl">นาที</span></span>
+      <span class="cd-sep"></span>
+      <span class="cd-seg"><span class="cd-num">${pad(t.s)}</span><span class="cd-lbl">วินาที</span></span>
+    </div>`;
+}
+
+function startCountdowns() {
+  if (_countdownInterval) clearInterval(_countdownInterval);
+  _countdownInterval = setInterval(() => {
+    document.querySelectorAll('.auction-countdown[data-endtime]').forEach(el => {
+      const end = el.dataset.endtime;
+      const t = getCountdownParts(end);
+      const pad = n => String(n).padStart(2,'0');
+      if (t.expired) {
+        el.classList.add('expired');
+        el.innerHTML = 'หมดเวลาแล้ว';
+      } else {
+        el.querySelectorAll('.cd-num')[0].textContent = pad(t.d);
+        el.querySelectorAll('.cd-num')[1].textContent = pad(t.h);
+        el.querySelectorAll('.cd-num')[2].textContent = pad(t.m);
+        el.querySelectorAll('.cd-num')[3].textContent = pad(t.s);
+      }
+    });
+  }, 1000);
+}
+// ================================================================
+
 function renderAuctions() {
   // คำนวณ discount เทียบกับ fixedPrice และเรียงลำดับ
   const enriched = auctionCards.map(a => {
     const ref = a.fixedPrice || a.marketPrice || 0;
-    // disc > 0 = ถูกกว่าตั้งขาย, disc < 0 = แพงกว่าตั้งขาย
     const disc = ref ? Math.round((1 - a.openPrice / ref) * 100) : 0;
     const isOverpriced = a.openPrice > ref && ref > 0;
     return { ...a, disc, isOverpriced, ref };
   }).sort((a, b) => {
-    // deals ก่อน, overpriced ท้าย, ตามด้วย disc
     if (a.isOverpriced !== b.isOverpriced) return a.isOverpriced ? 1 : -1;
     return b.disc - a.disc;
   });
@@ -1421,7 +1494,7 @@ function renderAuctions() {
   const deals = enriched.filter(a => a.disc >= 20 && !a.isOverpriced);
   const overpriced = enriched.filter(a => a.isOverpriced);
 
-  // Banner แจ้งเตือน deals + overpriced
+  // Banner
   const banner = document.getElementById('dealAlertBanner');
   let bannerHtml = '';
   if (deals.length > 0) {
@@ -1448,7 +1521,7 @@ function renderAuctions() {
   }
   banner.innerHTML = bannerHtml;
 
-  // Toast notification แรก
+  // Toast
   if (deals.length > 0 && !window._auctionToastShown) {
     window._auctionToastShown = true;
     const toast = document.createElement('div');
@@ -1460,32 +1533,25 @@ function renderAuctions() {
     setTimeout(() => toast.remove(), 6500);
   }
 
+  let idx = 0;
   document.getElementById('auctionGrid').innerHTML = enriched.map(a => {
     const isDeal = a.disc >= 20 && !a.isOverpriced;
     const isMild = a.disc > 0 && a.disc < 20 && !a.isOverpriced;
+    const cid = idx++;
 
-    // ป้ายราคาแบบ 2 แถว (ตั้งขาย / ประมูล)
-    const priceBlock = (isDeal || isMild || a.isOverpriced) ? `
+    const priceBlock = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0;">
         <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:5px 8px;text-align:center;">
           <div style="font-size:0.62rem;color:#9ca3af;margin-bottom:2px;">🏷️ ตั้งขายปกติ</div>
           <div style="font-weight:700;color:#fbbf24;font-size:0.9rem;">฿${a.ref.toLocaleString()}</div>
         </div>
-        <div style="background:${a.isOverpriced?'rgba(239,68,68,0.12)':'rgba(46,204,113,0.08)'};border:1px solid ${a.isOverpriced?'#ef4444':'rgba(46,204,113,0.3)'};border-radius:6px;padding:5px 8px;text-align:center;">
+        <div style="background:${a.isOverpriced?'rgba(239,68,68,0.12)':isDeal?'rgba(46,204,113,0.08)':'rgba(255,255,255,0.05)'};border:1px solid ${a.isOverpriced?'#ef4444':isDeal?'rgba(46,204,113,0.3)':'transparent'};border-radius:6px;padding:5px 8px;text-align:center;">
           <div style="font-size:0.62rem;color:${a.isOverpriced?'#fca5a5':'#9ca3af'};margin-bottom:2px;">🔨 เปิดประมูล</div>
           <div style="font-weight:700;color:${a.isOverpriced?'#ef4444':isDeal?'#4ade80':'#fbbf24'};font-size:0.9rem;">฿${a.openPrice.toLocaleString()}</div>
         </div>
-      </div>` : `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0;">
-        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:5px 8px;text-align:center;">
-          <div style="font-size:0.62rem;color:#9ca3af;margin-bottom:2px;">🏷️ ตั้งขายปกติ</div>
-          <div style="font-weight:700;color:#fbbf24;font-size:0.9rem;">฿${a.ref.toLocaleString()}</div>
-        </div>
-        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:5px 8px;text-align:center;">
-          <div style="font-size:0.62rem;color:#9ca3af;margin-bottom:2px;">🔨 เปิดประมูล</div>
-          <div style="font-weight:700;color:#fbbf24;font-size:0.9rem;">฿${a.openPrice.toLocaleString()}</div>
-        </div>
       </div>`;
+
+    const countdown = a.endTime ? countdownBarHTML(a.endTime, cid) : '';
 
     if (a.isOverpriced) {
       return `
@@ -1493,9 +1559,10 @@ function renderAuctions() {
           <div style="position:absolute;top:8px;right:8px;background:#d97706;color:#000;font-size:0.6rem;font-weight:800;padding:2px 7px;border-radius:10px;">⚠️ แพงกว่าตลาด +${Math.abs(a.disc)}%</div>
           <strong style="font-size:0.88rem;">${a.name}</strong>
           ${priceBlock}
-          <div style="font-size:0.68rem;color:#d97706;margin-bottom:6px;">ราคาประมูลสูงกว่าราคาตั้งขายปกติ — ควรซื้อแบบปกติแทน</div>
+          ${countdown}
+          <div style="font-size:0.68rem;color:#d97706;margin:4px 0 6px;">ราคาประมูลสูงกว่าราคาตั้งขายปกติ — ควรซื้อแบบปกติแทน</div>
           <div class="chip-rarity">${a.cardNo} • ${a.rarity}</div>
-          ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;text-align:center;padding:5px;background:rgba(217,119,6,0.15);color:#d97706;border:1px solid #d97706;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;">ดูรายการ (ระวัง)</a>` : ''}
+          ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;text-align:center;padding:5px;background:rgba(217,119,6,0.15);color:#d97706;border:1px solid #d97706;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;">🔍 ดูในเว็บ (ระวัง)</a>` : ''}
         </div>`;
     } else if (isDeal) {
       const savingBaht = (a.ref - a.openPrice).toLocaleString();
@@ -1504,22 +1571,25 @@ function renderAuctions() {
           <div class="deal-badge">-${a.disc}% ต่ำกว่าตั้งขาย</div>
           <strong>${a.name}</strong>
           ${priceBlock}
+          ${countdown}
           <div class="deal-saving">💰 ประหยัดได้ ~฿${savingBaht} เทียบราคาตั้งขาย</div>
           <div class="chip-rarity" style="margin-top:4px;">${a.cardNo} • ${a.rarity}</div>
           ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;text-align:center;padding:6px;background:#ef4444;color:white;border-radius:6px;font-size:0.78rem;font-weight:700;text-decoration:none;">🔨 เข้าประมูลเลย →</a>` : ''}
         </div>`;
     } else {
-      const discLabel = isMild ? `<span style="color:#4ade80;font-size:0.68rem;"> ↓${a.disc}%</span>` : '';
       return `
         <div class="auction-chip">
           <strong>${a.name}</strong>
           ${priceBlock}
-          ${discLabel ? `<div style="font-size:0.7rem;color:#4ade80;margin-bottom:4px;">ต่ำกว่าตั้งขาย ${a.disc}%</div>` : ''}
+          ${countdown}
+          ${isMild ? `<div style="font-size:0.7rem;color:#4ade80;margin-bottom:4px;">ต่ำกว่าตั้งขาย ${a.disc}%</div>` : ''}
           <div class="chip-rarity">${a.cardNo} • ${a.rarity}</div>
           ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:6px;text-align:center;padding:5px;background:rgba(217,119,6,0.2);color:#fbbf24;border:1px solid #d97706;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;">🔨 ดูการประมูล →</a>` : ''}
         </div>`;
     }
   }).join('');
+
+  startCountdowns();
 }
 
 function filterCards() {
