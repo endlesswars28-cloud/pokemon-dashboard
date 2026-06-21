@@ -1322,18 +1322,18 @@ const cards = [
 
 // ราคาประมูลที่น่าสนใจ (จากเว็บ TCGThailand) — marketPrice = ราคาตลาดปัจจุบัน
 const auctionCards = [
-  { name:"เมก้าเก็คโคกะex MUR", cardNo:"237/164", rarity:"MUR", openPrice:5000, marketPrice:9500 },
-  { name:"โมรุเปโกะex SAR",     cardNo:"230/164", rarity:"SAR", openPrice:2200, marketPrice:3200 },
-  { name:"เมก้าเก็คโคกะex SR",  cardNo:"193/164", rarity:"SR",  openPrice:777,  marketPrice:2000 },
-  { name:"มูคุ SR",              cardNo:"222/164", rarity:"SR",  openPrice:600,  marketPrice:1200 },
-  { name:"[กล่อง] เงามืดคุกคาม",cardNo:"-",       rarity:"Box", openPrice:1750, marketPrice:2800 },
-  { name:"เกโคกาชิระ AR",        cardNo:"171/164", rarity:"AR",  openPrice:200,  marketPrice:450  },
-  { name:"เคโรมัตซึ AR",         cardNo:"170/164", rarity:"AR",  openPrice:200,  marketPrice:450  },
-  { name:"ใบแดงพิเศษ SR",        cardNo:"210/164", rarity:"SR",  openPrice:150,  marketPrice:900  },
-  { name:"ระเบิดแรงถึงใจ SR",    cardNo:"213/164", rarity:"SR",  openPrice:70,   marketPrice:280  },
-  { name:"ฟ็อกสไล AR",           cardNo:"180/164", rarity:"AR",  openPrice:30,   marketPrice:90   },
-  { name:"เมก้าแชนเดลาex RR",   cardNo:"070/164", rarity:"RR",  openPrice:30,   marketPrice:950  },
-  { name:"มิรูฮอก AR",           cardNo:"186/164", rarity:"AR",  openPrice:30,   marketPrice:80   },
+  { name:"เมก้าเก็คโคกะex MUR", cardNo:"237/164", rarity:"MUR", openPrice:5000, marketPrice:9500, url:"https://www.tcgthailand.com/auctions?q=mega+greninja+mur" },
+  { name:"โมรุเปโกะex SAR",     cardNo:"230/164", rarity:"SAR", openPrice:2200, marketPrice:3200, url:"https://www.tcgthailand.com/auctions?q=morpeko+sar" },
+  { name:"เมก้าเก็คโคกะex SR",  cardNo:"193/164", rarity:"SR",  openPrice:777,  marketPrice:2000, url:"https://www.tcgthailand.com/auctions?q=mega+greninja+sr" },
+  { name:"มูคุ SR",              cardNo:"222/164", rarity:"SR",  openPrice:600,  marketPrice:1200, url:"https://www.tcgthailand.com/auctions?q=muku+sr" },
+  { name:"[กล่อง] เงามืดคุกคาม",cardNo:"-",       rarity:"Box", openPrice:1750, marketPrice:2800, url:"https://www.tcgthailand.com/auctions?q=ma5t+box" },
+  { name:"เกโคกาชิระ AR",        cardNo:"171/164", rarity:"AR",  openPrice:200,  marketPrice:450,  url:"https://www.tcgthailand.com/auctions?q=gekogashira+ar" },
+  { name:"เคโรมัตซึ AR",         cardNo:"170/164", rarity:"AR",  openPrice:200,  marketPrice:450,  url:"https://www.tcgthailand.com/auctions?q=keromatsu+ar" },
+  { name:"ใบแดงพิเศษ SR",        cardNo:"210/164", rarity:"SR",  openPrice:150,  marketPrice:900,  url:"https://www.tcgthailand.com/auctions?q=special+red+card+sr" },
+  { name:"ระเบิดแรงถึงใจ SR",    cardNo:"213/164", rarity:"SR",  openPrice:70,   marketPrice:280,  url:"https://www.tcgthailand.com/auctions?q=powerful+blast+sr" },
+  { name:"ฟ็อกสไล AR",           cardNo:"180/164", rarity:"AR",  openPrice:30,   marketPrice:90,   url:"https://www.tcgthailand.com/auctions?q=foxly+ar" },
+  { name:"เมก้าแชนเดลาex RR",   cardNo:"070/164", rarity:"RR",  openPrice:30,   marketPrice:950,  url:"https://www.tcgthailand.com/auctions?q=mega+chandelure+rr" },
+  { name:"มิรูฮอก AR",           cardNo:"186/164", rarity:"AR",  openPrice:30,   marketPrice:80,   url:"https://www.tcgthailand.com/auctions?q=miruhogu+ar" },
 ];
 
 const topSellers = [
@@ -1529,6 +1529,7 @@ function renderAuctions() {
           </div>
           <div class="deal-saving">💰 ประหยัดได้ ~฿${savingBaht}</div>
           <div class="chip-rarity" style="margin-top:4px;">${a.cardNo} • ${a.rarity}</div>
+          ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;text-align:center;padding:6px;background:#ef4444;color:white;border-radius:6px;font-size:0.78rem;font-weight:700;text-decoration:none;">🔨 เข้าประมูลเลย →</a>` : ''}
         </div>`;
     } else {
       const discLabel = isMild ? `<span style="color:#fbbf24;font-size:0.72rem;"> ↓${a.disc}%</span>` : '';
@@ -1538,6 +1539,7 @@ function renderAuctions() {
           <div class="chip-price">เปิด ฿${a.openPrice.toLocaleString()}${discLabel}</div>
           ${a.marketPrice ? `<div style="color:#666;font-size:0.7rem;">ตลาด ฿${a.marketPrice.toLocaleString()}</div>` : ''}
           <div class="chip-rarity">${a.cardNo} • ${a.rarity}</div>
+          ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:6px;text-align:center;padding:5px;background:rgba(217,119,6,0.2);color:#fbbf24;border:1px solid #d97706;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;">🔨 ดูการประมูล →</a>` : ''}
         </div>`;
     }
   }).join('');
