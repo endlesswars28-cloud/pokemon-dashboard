@@ -466,6 +466,45 @@
   /* deck modal tab active state */
   #dtab-visual.active, #dtab-list.active { color:white !important; background:rgba(255,255,255,0.12) !important; }
 
+  /* DEAL ALERT BANNER */
+  @keyframes dealPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.5)} 50%{box-shadow:0 0 0 8px rgba(239,68,68,0)} }
+  .deal-alert-banner {
+    background: linear-gradient(135deg,#450a0a,#7f1d1d);
+    border: 2px solid #ef4444;
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    animation: dealPulse 2s infinite;
+  }
+  .deal-alert-banner .deal-count {
+    background: #ef4444; color: white; font-size: 1.2rem; font-weight: 800;
+    padding: 4px 14px; border-radius: 20px; white-space: nowrap;
+  }
+  .deal-alert-banner .deal-text { color: #fca5a5; font-size: 0.88rem; flex: 1; }
+
+  /* HOT DEAL chip */
+  .auction-chip-deal {
+    background: linear-gradient(135deg,rgba(239,68,68,0.18),rgba(249,115,22,0.12));
+    border: 2px solid #ef4444;
+    border-radius: 10px; padding: 12px 14px; font-size: 0.82rem;
+    position: relative; overflow: hidden;
+  }
+  .auction-chip-deal::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg,transparent,rgba(239,68,68,0.08),transparent);
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+  .auction-chip-deal strong { color: #fca5a5; display: block; margin-bottom: 4px; font-size: 0.85rem; }
+  .deal-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: #ef4444; color: white; font-size: 0.65rem; font-weight: 800;
+    padding: 2px 7px; border-radius: 20px; white-space: nowrap;
+  }
+  .deal-saving { color: #4ade80; font-weight: 700; font-size: 0.8rem; }
+  .deal-market-price { color: #888; font-size: 0.72rem; text-decoration: line-through; }
+
   .auction-section {
     background: var(--card-bg);
     border: 1px solid #d97706;
@@ -612,6 +651,7 @@
 
   <div class="auction-section" style="margin-top:20px">
     <h3>🔨 ประมูลที่กำลังเปิดอยู่ — เงามืดคุกคาม (MA5 T) | TCGThailand.com</h3>
+    <div id="dealAlertBanner"></div>
     <div class="auction-grid" id="auctionGrid"></div>
   </div>
 </div>
@@ -1280,20 +1320,20 @@ const cards = [
   { id:23, name:"[กล่อง] เงามืดคุกคาม",   nameTh:"Box Set MA5 T",        type:"colorless", rarity:"Box", set:"เงามืดคุกคาม MA5 T", price:1750,  trend:"+3%",  hp:0,   attack1:"— (สินค้า Sealed)",     attack2:"บอกซ์ปิดผนึก MA5 T",    sold:89, cardNo:"-", img:"https://tcgv2-r2.tumwebsme.com/cdn-cgi/image/width=250,height=350,quality=75,format=auto,fit=contain/production/category_card_019ede1f-8b45-723b-a82e-051036df9fba.webp" },
 ];
 
-// ราคาประมูลที่น่าสนใจ (จากเว็บ TCGThailand)
+// ราคาประมูลที่น่าสนใจ (จากเว็บ TCGThailand) — marketPrice = ราคาตลาดปัจจุบัน
 const auctionCards = [
-  { name:"เมก้าเก็คโคกะex MUR", cardNo:"237/164", rarity:"MUR", openPrice:5000 },
-  { name:"โมรุเปโกะex SAR", cardNo:"230/164", rarity:"SAR", openPrice:5000 },
-  { name:"เมก้าเก็คโคกะex SR", cardNo:"193/164", rarity:"SR", openPrice:777 },
-  { name:"มูคุ SR", cardNo:"222/164", rarity:"SR", openPrice:600 },
-  { name:"[กล่อง] เงามืดคุกคาม", cardNo:"-", rarity:"Box", openPrice:1750 },
-  { name:"เกโคกาชิระ AR", cardNo:"171/164", rarity:"AR", openPrice:200 },
-  { name:"เคโรมัตซึ AR", cardNo:"170/164", rarity:"AR", openPrice:200 },
-  { name:"ใบแดงพิเศษ SR", cardNo:"210/164", rarity:"SR", openPrice:150 },
-  { name:"ระเบิดแรงถึงใจ SR", cardNo:"213/164", rarity:"SR", openPrice:70 },
-  { name:"ฟ็อกสไล AR", cardNo:"180/164", rarity:"AR", openPrice:30 },
-  { name:"เมก้าแชนเดลาex RR", cardNo:"070/164", rarity:"RR", openPrice:30 },
-  { name:"มิรูฮอก AR", cardNo:"186/164", rarity:"AR", openPrice:30 },
+  { name:"เมก้าเก็คโคกะex MUR", cardNo:"237/164", rarity:"MUR", openPrice:5000, marketPrice:9500 },
+  { name:"โมรุเปโกะex SAR",     cardNo:"230/164", rarity:"SAR", openPrice:2200, marketPrice:3200 },
+  { name:"เมก้าเก็คโคกะex SR",  cardNo:"193/164", rarity:"SR",  openPrice:777,  marketPrice:2000 },
+  { name:"มูคุ SR",              cardNo:"222/164", rarity:"SR",  openPrice:600,  marketPrice:1200 },
+  { name:"[กล่อง] เงามืดคุกคาม",cardNo:"-",       rarity:"Box", openPrice:1750, marketPrice:2800 },
+  { name:"เกโคกาชิระ AR",        cardNo:"171/164", rarity:"AR",  openPrice:200,  marketPrice:450  },
+  { name:"เคโรมัตซึ AR",         cardNo:"170/164", rarity:"AR",  openPrice:200,  marketPrice:450  },
+  { name:"ใบแดงพิเศษ SR",        cardNo:"210/164", rarity:"SR",  openPrice:150,  marketPrice:900  },
+  { name:"ระเบิดแรงถึงใจ SR",    cardNo:"213/164", rarity:"SR",  openPrice:70,   marketPrice:280  },
+  { name:"ฟ็อกสไล AR",           cardNo:"180/164", rarity:"AR",  openPrice:30,   marketPrice:90   },
+  { name:"เมก้าแชนเดลาex RR",   cardNo:"070/164", rarity:"RR",  openPrice:30,   marketPrice:950  },
+  { name:"มิรูฮอก AR",           cardNo:"186/164", rarity:"AR",  openPrice:30,   marketPrice:80   },
 ];
 
 const topSellers = [
@@ -1440,13 +1480,67 @@ function renderGallery(data) {
 }
 
 function renderAuctions() {
-  document.getElementById('auctionGrid').innerHTML = auctionCards.map(a => `
-    <div class="auction-chip">
-      <strong>${a.name}</strong>
-      <div class="chip-price">เปิด ฿${a.openPrice.toLocaleString()}</div>
-      <div class="chip-rarity">${a.cardNo} • ${a.rarity}</div>
-    </div>
-  `).join('');
+  // คำนวณ discount และเรียง deals ก่อน
+  const enriched = auctionCards.map(a => {
+    const disc = a.marketPrice ? Math.round((1 - a.openPrice / a.marketPrice) * 100) : 0;
+    return { ...a, disc };
+  }).sort((a, b) => b.disc - a.disc);
+
+  const deals = enriched.filter(a => a.disc >= 20);
+
+  // Banner แจ้งเตือน
+  const banner = document.getElementById('dealAlertBanner');
+  if (deals.length > 0) {
+    banner.innerHTML = `
+      <div class="deal-alert-banner">
+        <div class="deal-count">🔥 ${deals.length} ดีล</div>
+        <div class="deal-text">
+          <strong style="color:#fca5a5;">พบ ${deals.length} รายการต่ำกว่าราคาตลาดมากกว่า 20%!</strong><br>
+          ${deals.map(d => `<span style="color:#fdba74">${d.name} <strong style="color:#4ade80;">-${d.disc}%</strong></span>`).join(' &nbsp;·&nbsp; ')}
+        </div>
+      </div>`;
+    // Toast notification แรก
+    if (!window._auctionToastShown) {
+      window._auctionToastShown = true;
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;background:linear-gradient(135deg,#450a0a,#7f1d1d);border:2px solid #ef4444;color:white;padding:14px 20px;border-radius:12px;font-family:Sarabun,sans-serif;font-size:0.88rem;box-shadow:0 8px 32px rgba(0,0,0,0.6);max-width:320px;cursor:pointer;';
+      toast.innerHTML = `<div style="font-weight:800;font-size:1rem;margin-bottom:4px;">🔥 พบดีลต่ำกว่าตลาด!</div><div style="color:#fca5a5">${deals.length} รายการ เปิดประมูลต่ำกว่าราคาตลาด</div><div style="color:#fbbf24;font-size:0.75rem;margin-top:6px;">คลิกเพื่อดูรายการประมูล ↓</div>`;
+      toast.onclick = () => { document.querySelector('.auction-section')?.scrollIntoView({behavior:'smooth'}); toast.remove(); };
+      document.body.appendChild(toast);
+      setTimeout(() => toast.style.opacity = '0', 6000);
+      setTimeout(() => toast.remove(), 6500);
+    }
+  } else {
+    banner.innerHTML = '';
+  }
+
+  document.getElementById('auctionGrid').innerHTML = enriched.map(a => {
+    const isDeal = a.disc >= 20;
+    const isMild = a.disc > 0 && a.disc < 20;
+    if (isDeal) {
+      const savingBaht = (a.marketPrice - a.openPrice).toLocaleString();
+      return `
+        <div class="auction-chip-deal">
+          <div class="deal-badge">-${a.disc}% ต่ำกว่าตลาด</div>
+          <strong>${a.name}</strong>
+          <div style="display:flex;align-items:baseline;gap:8px;margin:4px 0;">
+            <span class="chip-price" style="font-size:1rem;color:#ef4444;">เปิด ฿${a.openPrice.toLocaleString()}</span>
+            <span class="deal-market-price">฿${a.marketPrice.toLocaleString()}</span>
+          </div>
+          <div class="deal-saving">💰 ประหยัดได้ ~฿${savingBaht}</div>
+          <div class="chip-rarity" style="margin-top:4px;">${a.cardNo} • ${a.rarity}</div>
+        </div>`;
+    } else {
+      const discLabel = isMild ? `<span style="color:#fbbf24;font-size:0.72rem;"> ↓${a.disc}%</span>` : '';
+      return `
+        <div class="auction-chip">
+          <strong>${a.name}</strong>
+          <div class="chip-price">เปิด ฿${a.openPrice.toLocaleString()}${discLabel}</div>
+          ${a.marketPrice ? `<div style="color:#666;font-size:0.7rem;">ตลาด ฿${a.marketPrice.toLocaleString()}</div>` : ''}
+          <div class="chip-rarity">${a.cardNo} • ${a.rarity}</div>
+        </div>`;
+    }
+  }).join('');
 }
 
 function filterCards() {
