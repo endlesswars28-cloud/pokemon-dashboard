@@ -800,7 +800,7 @@
       <canvas id="rarityPriceChart"></canvas>
     </div>
     <div class="chart-card">
-      <div class="section-title">📈 แนวโน้มราคา เมก้าดาร์กไรex MUR vs เก็คโคกะex SAR (6 เดือน)</div>
+      <div class="section-title">💎 10 อันดับการ์ดราคาสูงสุด (฿)</div>
       <canvas id="trendChart"></canvas>
     </div>
     <div class="chart-card">
@@ -3025,24 +3025,41 @@ function renderSalesCharts() {
   });
 
   // Trend Chart (เมก้าดาร์กไรex MUR price 6 months estimated)
+  const top10 = [...cards].sort((a,b)=>b.price-a.price).slice(0,10);
+  const top10Colors = [
+    '#FFCB05','#f59e0b','#f97316','#ef4444','#e11d48',
+    '#9b59b6','#3498db','#2ecc71','#1abc9c','#95a5a6'
+  ];
   new Chart(document.getElementById('trendChart'), {
-    type: 'line',
+    type: 'bar',
     data: {
-      labels: ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.'],
+      labels: top10.map(c => c.name.length > 18 ? c.name.slice(0,17)+'…' : c.name),
       datasets: [{
-        label: 'เมก้าดาร์กไรex MUR (฿)',
-        data: [6200, 7100, 7800, 8200, 8700, 9050],
-        borderColor: '#9b59b6', backgroundColor: 'rgba(155,89,182,0.15)',
-        fill: true, tension: 0.4, pointBackgroundColor: '#FFCB05', pointRadius: 5
-      },{
-        label: 'เมก้าเก็คโคกะex SAR (฿)',
-        data: [3500, 3800, 4100, 4400, 4700, 5000],
-        borderColor: '#3498db', backgroundColor: 'rgba(52,152,219,0.1)',
-        fill: false, tension: 0.4, pointBackgroundColor: '#67e8f9', pointRadius: 4
+        label: 'ราคา (฿)',
+        data: top10.map(c => c.price),
+        backgroundColor: top10Colors,
+        borderColor: top10Colors.map(c => c+'cc'),
+        borderWidth: 1,
+        borderRadius: 6,
       }]
     },
-    options: { responsive:true, plugins:{legend:{labels:{color:'#ccc'}}},
-      scales:{ x:{ticks:{color:'#888'}}, y:{ticks:{color:'#888',callback:v=>'฿'+v.toLocaleString()},grid:{color:'rgba(255,255,255,0.05)'}} } }
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ฿' + ctx.raw.toLocaleString(),
+            afterLabel: ctx => top10[ctx.dataIndex].trend ? '  เทรนด์: ' + top10[ctx.dataIndex].trend : ''
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color:'#888', callback: v => '฿'+v.toLocaleString() }, grid: { color:'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color:'#ddd', font:{ size:11 } } }
+      }
+    }
   });
 
   // Type Donut Chart
