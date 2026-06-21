@@ -623,7 +623,7 @@
     <div class="stat-card"><div class="stat-icon">🌐</div><div class="stat-value">4</div><div class="stat-label">แพลตฟอร์มที่ค้นหา</div></div>
     <div class="stat-card"><div class="stat-icon">💎</div><div class="stat-value">TCGThailand</div><div class="stat-label">ตลาดการ์ดหายากที่ดีที่สุด</div></div>
     <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value">Shopee / Lazada</div><div class="stat-label">เหมาะกับซื้อกล่อง/ซอง</div></div>
-    <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value">มิ.ย. 2026</div><div class="stat-label">ข้อมูล ณ เดือน</div></div>
+    <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="updatedDateVal" style="font-size:1rem;">—</div><div class="stat-label" id="updatedDateLbl">กำลังโหลด...</div></div>
   </div>
 
   <!-- Platform Overview -->
@@ -785,8 +785,8 @@
     </div>
     <div class="stat-card">
       <div class="stat-icon">📅</div>
-      <div class="stat-value">มิ.ย. 2026</div>
-      <div class="stat-label">ข้อมูล ณ เดือน</div>
+      <div class="stat-value" id="updatedDateVal2" style="font-size:1rem;">—</div>
+      <div class="stat-label" id="updatedDateLbl2">กำลังโหลด...</div>
     </div>
   </div>
 
@@ -3166,9 +3166,25 @@ async function loadPricesJSON() {
       document.body.appendChild(badge);
       setTimeout(() => badge.remove(), 4000);
     }
+    // อัปเดต stat card วันที่+เวลา
+    const priceDate = data[0]?.updatedAt || '';
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+    const dateStr = priceDate
+      ? new Date(priceDate).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' })
+      : now.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' });
+    const displayVal = dateStr;
+    const displayLbl = 'ราคาอัพเดท เวลา ' + timeStr + ' น.';
+    ['updatedDateVal','updatedDateVal2'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=displayVal; });
+    ['updatedDateLbl','updatedDateLbl2'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=displayLbl; });
   } catch (e) {
-    // เปิดจาก file:// หรือไม่มี prices.json — ใช้ราคาฝังตัวต่อไป
+    // เปิดจาก file:// หรือไม่มี prices.json — ใช้วันที่ปัจจุบัน
     console.log('prices.json not found — using built-in prices');
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' });
+    const timeStr = now.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+    ['updatedDateVal','updatedDateVal2'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=dateStr; });
+    ['updatedDateLbl','updatedDateLbl2'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent='เปิดดู เวลา ' + timeStr + ' น.'; });
   }
 }
 
