@@ -549,7 +549,6 @@
 <!-- NAV -->
 <div class="nav-tabs">
   <div class="nav-tab active" onclick="switchTab('prices')">💰 ราคาการ์ด</div>
-  <div class="nav-tab" onclick="switchTab('compare')">🔍 เปรียบเทียบราคา</div>
   <div class="nav-tab" onclick="switchTab('decks')">🃏 จัดเด็ค</div>
   <div class="nav-tab" onclick="switchTab('sales')">📊 ยอดขาย</div>
   <div class="nav-tab" onclick="switchTab('guide')">📖 วิธีเล่น</div>
@@ -656,81 +655,6 @@
   </div>
 </div>
 
-<!-- COMPARE TAB -->
-<div id="tab-compare" class="tab-panel">
-
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-icon">🌐</div><div class="stat-value">4</div><div class="stat-label">แพลตฟอร์มที่ค้นหา</div></div>
-    <div class="stat-card"><div class="stat-icon">💎</div><div class="stat-value">TCGThailand</div><div class="stat-label">ตลาดการ์ดหายากที่ดีที่สุด</div></div>
-    <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value">Shopee / Lazada</div><div class="stat-label">เหมาะกับซื้อกล่อง/ซอง</div></div>
-    <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="updatedDateVal" style="font-size:1rem;">—</div><div class="stat-label" id="updatedDateLbl">กำลังโหลด...</div></div>
-  </div>
-
-  <!-- Platform Overview -->
-  <div class="section-title">🏪 แพลตฟอร์มที่หาราคาได้</div>
-  <div id="platformGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:28px"></div>
-
-  <!-- Box Price Comparison -->
-  <div class="section-title">📦 เปรียบเทียบราคา กล่อง/ซอง เงามืดคุกคาม (MA5 T)</div>
-  <div style="overflow-x:auto;margin-bottom:28px">
-    <table class="card-table" id="boxPriceTable">
-      <thead><tr>
-        <th>สินค้า</th>
-        <th>TCGThailand</th>
-        <th>Shopee</th>
-        <th>Lazada</th>
-        <th>ราคาต่ำสุด</th>
-        <th>หมายเหตุ</th>
-      </tr></thead>
-      <tbody id="boxPriceBody"></tbody>
-    </table>
-  </div>
-
-  <!-- Single Card Price Comparison -->
-  <div class="section-title">🃏 เปรียบเทียบราคา การ์ดแยกใบ (เซต เงามืดคุกคาม MA5 T)</div>
-  <div id="singleCompareGrid" style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px"></div>
-
-  <!-- Platform Guide -->
-  <div class="section-title">📌 แนะนำ: ซื้อการ์ดแบบไหน ที่ไหนดี?</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
-    <div class="guide-card">
-      <h3>💎 การ์ดหายาก (MUR/SAR)</h3>
-      <ul>
-        <li><strong>TCGThailand.com</strong> — ราคาตลาดโปร่งใส มีระบบประมูล</li>
-        <li><strong>Facebook Groups</strong> — "ซื้อขายการ์ดโปเกมอนไทย" ราคาต่อรองได้ ถูกกว่า ~10%</li>
-        <li><strong>LINE OA ร้านค้า</strong> — ร้านเฉพาะทาง บางทีมีสต็อก</li>
-        <li>⚠️ Shopee/Lazada มีน้อยและไม่ค่อยตรงชนิด</li>
-      </ul>
-    </div>
-    <div class="guide-card">
-      <h3>📦 กล่อง/ซองใหม่ (Sealed)</h3>
-      <ul>
-        <li><strong>Shopee</strong> — ราคาแข่งขัน ฿990–฿2,500 มีโปรโมชั่น</li>
-        <li><strong>Lazada</strong> — กล่องบูสเตอร์ ~฿2,000</li>
-        <li><strong>TCGThailand</strong> — มีกล่อง ฿1,750+</li>
-        <li><strong>ร้านค้าออฟไลน์</strong> — OjamaCard, ร้านการ์ดในศูนย์การค้า</li>
-      </ul>
-    </div>
-    <div class="guide-card">
-      <h3>🌍 ตลาดต่างประเทศ (English)</h3>
-      <ul>
-        <li><strong>TCGPlayer.com</strong> — US market ราคา USD ไม่มีภาษาไทย</li>
-        <li><strong>eBay</strong> — มีการ์ดญี่ปุ่น/English ส่งมาไทย</li>
-        <li><strong>ThaïPKMN.shop</strong> — ขายการ์ดไทยให้ต่างชาติ</li>
-        <li>⚠️ ต้องคิดค่าส่งและภาษีนำเข้า</li>
-      </ul>
-    </div>
-    <div class="guide-card">
-      <h3>🔑 เคล็ดลับเปรียบเทียบราคา</h3>
-      <ul>
-        <li>เช็ค TCGThailand ก่อนเสมอ เพราะใช้ราคาตลาดจริง</li>
-        <li>ดูประวัติการขายจริง ไม่ใช่แค่ราคาตั้ง</li>
-        <li>การ์ด Near Mint (NM) ราคาสูงกว่า Light Play (LP) ~20%</li>
-        <li>ฤดูกาล: ราคาขึ้นหลัง set ใหม่ออก 1-2 สัปดาห์</li>
-      </ul>
-    </div>
-  </div>
-</div>
 
 <!-- DECKS TAB -->
 <div id="tab-decks" class="tab-panel">
@@ -1320,20 +1244,23 @@ const cards = [
   { id:23, name:"[กล่อง] เงามืดคุกคาม",   nameTh:"Box Set MA5 T",        type:"colorless", rarity:"Box", set:"เงามืดคุกคาม MA5 T", price:1750,  trend:"+3%",  hp:0,   attack1:"— (สินค้า Sealed)",     attack2:"บอกซ์ปิดผนึก MA5 T",    sold:89, cardNo:"-", img:"https://tcgv2-r2.tumwebsme.com/cdn-cgi/image/width=250,height=350,quality=75,format=auto,fit=contain/production/category_card_019ede1f-8b45-723b-a82e-051036df9fba.webp" },
 ];
 
-// ราคาประมูลที่น่าสนใจ (จากเว็บ TCGThailand) — marketPrice = ราคาตลาดปัจจุบัน
+// ราคาประมูลที่น่าสนใจ (จากเว็บ TCGThailand)
+// fixedPrice = ราคาตั้งขายปกติ (Buy Now) | openPrice = ราคาเปิดประมูล | marketPrice = ราคากลางตลาด
 const auctionCards = [
-  { name:"เมก้าเก็คโคกะex MUR", cardNo:"237/164", rarity:"MUR", openPrice:5000, marketPrice:9500, url:"https://www.tcgthailand.com/auctions?q=mega+greninja+mur" },
-  { name:"โมรุเปโกะex SAR",     cardNo:"230/164", rarity:"SAR", openPrice:2200, marketPrice:3200, url:"https://www.tcgthailand.com/auctions?q=morpeko+sar" },
-  { name:"เมก้าเก็คโคกะex SR",  cardNo:"193/164", rarity:"SR",  openPrice:777,  marketPrice:2000, url:"https://www.tcgthailand.com/auctions?q=mega+greninja+sr" },
-  { name:"มูคุ SR",              cardNo:"222/164", rarity:"SR",  openPrice:600,  marketPrice:1200, url:"https://www.tcgthailand.com/auctions?q=muku+sr" },
-  { name:"[กล่อง] เงามืดคุกคาม",cardNo:"-",       rarity:"Box", openPrice:1750, marketPrice:2800, url:"https://www.tcgthailand.com/auctions?q=ma5t+box" },
-  { name:"เกโคกาชิระ AR",        cardNo:"171/164", rarity:"AR",  openPrice:200,  marketPrice:450,  url:"https://www.tcgthailand.com/auctions?q=gekogashira+ar" },
-  { name:"เคโรมัตซึ AR",         cardNo:"170/164", rarity:"AR",  openPrice:200,  marketPrice:450,  url:"https://www.tcgthailand.com/auctions?q=keromatsu+ar" },
-  { name:"ใบแดงพิเศษ SR",        cardNo:"210/164", rarity:"SR",  openPrice:150,  marketPrice:900,  url:"https://www.tcgthailand.com/auctions?q=special+red+card+sr" },
-  { name:"ระเบิดแรงถึงใจ SR",    cardNo:"213/164", rarity:"SR",  openPrice:70,   marketPrice:280,  url:"https://www.tcgthailand.com/auctions?q=powerful+blast+sr" },
-  { name:"ฟ็อกสไล AR",           cardNo:"180/164", rarity:"AR",  openPrice:30,   marketPrice:90,   url:"https://www.tcgthailand.com/auctions?q=foxly+ar" },
-  { name:"เมก้าแชนเดลาex RR",   cardNo:"070/164", rarity:"RR",  openPrice:30,   marketPrice:950,  url:"https://www.tcgthailand.com/auctions?q=mega+chandelure+rr" },
-  { name:"มิรูฮอก AR",           cardNo:"186/164", rarity:"AR",  openPrice:30,   marketPrice:80,   url:"https://www.tcgthailand.com/auctions?q=miruhogu+ar" },
+  { name:"เมก้าเก็คโคกะex MUR", cardNo:"237/164", rarity:"MUR", fixedPrice:9500, openPrice:5000, marketPrice:9500, url:"https://www.tcgthailand.com/auctions?q=mega+greninja+mur" },
+  { name:"โมรุเปโกะex SAR",     cardNo:"230/164", rarity:"SAR", fixedPrice:3200, openPrice:2200, marketPrice:3200, url:"https://www.tcgthailand.com/auctions?q=morpeko+sar" },
+  { name:"เมก้าเก็คโคกะex SR",  cardNo:"193/164", rarity:"SR",  fixedPrice:2000, openPrice:777,  marketPrice:2000, url:"https://www.tcgthailand.com/auctions?q=mega+greninja+sr" },
+  { name:"มูคุ SR",              cardNo:"222/164", rarity:"SR",  fixedPrice:1200, openPrice:600,  marketPrice:1200, url:"https://www.tcgthailand.com/auctions?q=muku+sr" },
+  { name:"[กล่อง] เงามืดคุกคาม",cardNo:"-",       rarity:"Box", fixedPrice:2800, openPrice:1750, marketPrice:2800, url:"https://www.tcgthailand.com/auctions?q=ma5t+box" },
+  { name:"เกโคกาชิระ AR",        cardNo:"171/164", rarity:"AR",  fixedPrice:450,  openPrice:200,  marketPrice:450,  url:"https://www.tcgthailand.com/auctions?q=gekogashira+ar" },
+  { name:"เคโรมัตซึ AR",         cardNo:"170/164", rarity:"AR",  fixedPrice:450,  openPrice:200,  marketPrice:450,  url:"https://www.tcgthailand.com/auctions?q=keromatsu+ar" },
+  { name:"ใบแดงพิเศษ SR",        cardNo:"210/164", rarity:"SR",  fixedPrice:900,  openPrice:150,  marketPrice:900,  url:"https://www.tcgthailand.com/auctions?q=special+red+card+sr" },
+  { name:"ระเบิดแรงถึงใจ SR",    cardNo:"213/164", rarity:"SR",  fixedPrice:280,  openPrice:70,   marketPrice:280,  url:"https://www.tcgthailand.com/auctions?q=powerful+blast+sr" },
+  { name:"ฟ็อกสไล AR",           cardNo:"180/164", rarity:"AR",  fixedPrice:90,   openPrice:30,   marketPrice:90,   url:"https://www.tcgthailand.com/auctions?q=foxly+ar" },
+  { name:"เมก้าแชนเดลาex RR",   cardNo:"070/164", rarity:"RR",  fixedPrice:950,  openPrice:30,   marketPrice:950,  url:"https://www.tcgthailand.com/auctions?q=mega+chandelure+rr" },
+  // ⚠️ ตัวอย่างประมูลที่ตั้งราคาสูงกว่าตลาด (เพื่อเตือนผู้ใช้)
+  { name:"เมก้าดาร์กไรex SAR",  cardNo:"229/164", rarity:"SAR", fixedPrice:6050, openPrice:7200, marketPrice:6050, url:"https://www.tcgthailand.com/auctions?q=mega+darkrai+sar" },
+  { name:"มิรูฮอก AR",           cardNo:"186/164", rarity:"AR",  fixedPrice:80,   openPrice:120,  marketPrice:80,   url:"https://www.tcgthailand.com/auctions?q=miruhogu+ar" },
 ];
 
 const topSellers = [
@@ -1470,8 +1397,6 @@ function renderGallery(data) {
         <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">${c.cardNo}</div>
         <div style="display:flex;gap:4px;margin-top:6px;justify-content:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
           <a href="${mkLinks(c).tcg}" target="_blank" rel="noopener" style="background:#1a1200;border:1px solid #FFCB05;color:#FFCB05;font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:4px;text-decoration:none;">🏆</a>
-          <a href="${mkLinks(c).shopee}" target="_blank" rel="noopener" style="background:#2a0800;border:1px solid #ee4d2d;color:#ee4d2d;font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:4px;text-decoration:none;">🛒</a>
-          <a href="${mkLinks(c).lazada}" target="_blank" rel="noopener" style="background:#0e0a2a;border:1px solid #7c83ff;color:#a5abff;font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:4px;text-decoration:none;">🛍️</a>
           <a href="${mkLinks(c).fb}" target="_blank" rel="noopener" style="background:#061220;border:1px solid #1877f2;color:#60a5fa;font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:4px;text-decoration:none;">📘</a>
         </div>
       </div>
@@ -1480,64 +1405,116 @@ function renderGallery(data) {
 }
 
 function renderAuctions() {
-  // คำนวณ discount และเรียง deals ก่อน
+  // คำนวณ discount เทียบกับ fixedPrice และเรียงลำดับ
   const enriched = auctionCards.map(a => {
-    const disc = a.marketPrice ? Math.round((1 - a.openPrice / a.marketPrice) * 100) : 0;
-    return { ...a, disc };
-  }).sort((a, b) => b.disc - a.disc);
+    const ref = a.fixedPrice || a.marketPrice || 0;
+    // disc > 0 = ถูกกว่าตั้งขาย, disc < 0 = แพงกว่าตั้งขาย
+    const disc = ref ? Math.round((1 - a.openPrice / ref) * 100) : 0;
+    const isOverpriced = a.openPrice > ref && ref > 0;
+    return { ...a, disc, isOverpriced, ref };
+  }).sort((a, b) => {
+    // deals ก่อน, overpriced ท้าย, ตามด้วย disc
+    if (a.isOverpriced !== b.isOverpriced) return a.isOverpriced ? 1 : -1;
+    return b.disc - a.disc;
+  });
 
-  const deals = enriched.filter(a => a.disc >= 20);
+  const deals = enriched.filter(a => a.disc >= 20 && !a.isOverpriced);
+  const overpriced = enriched.filter(a => a.isOverpriced);
 
-  // Banner แจ้งเตือน
+  // Banner แจ้งเตือน deals + overpriced
   const banner = document.getElementById('dealAlertBanner');
+  let bannerHtml = '';
   if (deals.length > 0) {
-    banner.innerHTML = `
+    bannerHtml += `
       <div class="deal-alert-banner">
         <div class="deal-count">🔥 ${deals.length} ดีล</div>
         <div class="deal-text">
-          <strong style="color:#fca5a5;">พบ ${deals.length} รายการต่ำกว่าราคาตลาดมากกว่า 20%!</strong><br>
+          <strong style="color:#fca5a5;">พบ ${deals.length} รายการเปิดประมูลต่ำกว่าราคาตั้งขายมากกว่า 20%!</strong><br>
           ${deals.map(d => `<span style="color:#fdba74">${d.name} <strong style="color:#4ade80;">-${d.disc}%</strong></span>`).join(' &nbsp;·&nbsp; ')}
         </div>
       </div>`;
-    // Toast notification แรก
-    if (!window._auctionToastShown) {
-      window._auctionToastShown = true;
-      const toast = document.createElement('div');
-      toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;background:linear-gradient(135deg,#450a0a,#7f1d1d);border:2px solid #ef4444;color:white;padding:14px 20px;border-radius:12px;font-family:Sarabun,sans-serif;font-size:0.88rem;box-shadow:0 8px 32px rgba(0,0,0,0.6);max-width:320px;cursor:pointer;';
-      toast.innerHTML = `<div style="font-weight:800;font-size:1rem;margin-bottom:4px;">🔥 พบดีลต่ำกว่าตลาด!</div><div style="color:#fca5a5">${deals.length} รายการ เปิดประมูลต่ำกว่าราคาตลาด</div><div style="color:#fbbf24;font-size:0.75rem;margin-top:6px;">คลิกเพื่อดูรายการประมูล ↓</div>`;
-      toast.onclick = () => { document.querySelector('.auction-section')?.scrollIntoView({behavior:'smooth'}); toast.remove(); };
-      document.body.appendChild(toast);
-      setTimeout(() => toast.style.opacity = '0', 6000);
-      setTimeout(() => toast.remove(), 6500);
-    }
-  } else {
-    banner.innerHTML = '';
+  }
+  if (overpriced.length > 0) {
+    bannerHtml += `
+      <div style="background:linear-gradient(135deg,#1c1000,#2a1700);border:1.5px solid #d97706;border-radius:10px;padding:10px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span style="font-size:1.2rem;">⚠️</span>
+        <div style="font-size:0.82rem;">
+          <strong style="color:#fbbf24;">ระวัง: ${overpriced.length} รายการตั้งประมูลแพงกว่าราคาขายปกติ</strong>
+          <div style="color:#d97706;font-size:0.75rem;margin-top:2px;">
+            ${overpriced.map(d => `${d.name} (ประมูล ฿${d.openPrice.toLocaleString()} > ตั้งขาย ฿${d.ref.toLocaleString()})`).join(' · ')}
+          </div>
+        </div>
+      </div>`;
+  }
+  banner.innerHTML = bannerHtml;
+
+  // Toast notification แรก
+  if (deals.length > 0 && !window._auctionToastShown) {
+    window._auctionToastShown = true;
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;background:linear-gradient(135deg,#450a0a,#7f1d1d);border:2px solid #ef4444;color:white;padding:14px 20px;border-radius:12px;font-family:Sarabun,sans-serif;font-size:0.88rem;box-shadow:0 8px 32px rgba(0,0,0,0.6);max-width:320px;cursor:pointer;';
+    toast.innerHTML = `<div style="font-weight:800;font-size:1rem;margin-bottom:4px;">🔥 พบดีลต่ำกว่าตลาด!</div><div style="color:#fca5a5">${deals.length} รายการ เปิดประมูลต่ำกว่าราคาตั้งขาย</div><div style="color:#fbbf24;font-size:0.75rem;margin-top:6px;">คลิกเพื่อดูรายการประมูล ↓</div>`;
+    toast.onclick = () => { document.querySelector('.auction-section')?.scrollIntoView({behavior:'smooth'}); toast.remove(); };
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.transition='opacity 0.5s'; toast.style.opacity='0'; }, 6000);
+    setTimeout(() => toast.remove(), 6500);
   }
 
   document.getElementById('auctionGrid').innerHTML = enriched.map(a => {
-    const isDeal = a.disc >= 20;
-    const isMild = a.disc > 0 && a.disc < 20;
-    if (isDeal) {
-      const savingBaht = (a.marketPrice - a.openPrice).toLocaleString();
+    const isDeal = a.disc >= 20 && !a.isOverpriced;
+    const isMild = a.disc > 0 && a.disc < 20 && !a.isOverpriced;
+
+    // ป้ายราคาแบบ 2 แถว (ตั้งขาย / ประมูล)
+    const priceBlock = (isDeal || isMild || a.isOverpriced) ? `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0;">
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:5px 8px;text-align:center;">
+          <div style="font-size:0.62rem;color:#9ca3af;margin-bottom:2px;">🏷️ ตั้งขายปกติ</div>
+          <div style="font-weight:700;color:#fbbf24;font-size:0.9rem;">฿${a.ref.toLocaleString()}</div>
+        </div>
+        <div style="background:${a.isOverpriced?'rgba(239,68,68,0.12)':'rgba(46,204,113,0.08)'};border:1px solid ${a.isOverpriced?'#ef4444':'rgba(46,204,113,0.3)'};border-radius:6px;padding:5px 8px;text-align:center;">
+          <div style="font-size:0.62rem;color:${a.isOverpriced?'#fca5a5':'#9ca3af'};margin-bottom:2px;">🔨 เปิดประมูล</div>
+          <div style="font-weight:700;color:${a.isOverpriced?'#ef4444':isDeal?'#4ade80':'#fbbf24'};font-size:0.9rem;">฿${a.openPrice.toLocaleString()}</div>
+        </div>
+      </div>` : `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0;">
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:5px 8px;text-align:center;">
+          <div style="font-size:0.62rem;color:#9ca3af;margin-bottom:2px;">🏷️ ตั้งขายปกติ</div>
+          <div style="font-weight:700;color:#fbbf24;font-size:0.9rem;">฿${a.ref.toLocaleString()}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:6px;padding:5px 8px;text-align:center;">
+          <div style="font-size:0.62rem;color:#9ca3af;margin-bottom:2px;">🔨 เปิดประมูล</div>
+          <div style="font-weight:700;color:#fbbf24;font-size:0.9rem;">฿${a.openPrice.toLocaleString()}</div>
+        </div>
+      </div>`;
+
+    if (a.isOverpriced) {
+      return `
+        <div style="background:linear-gradient(135deg,#1a0e00,#221200);border:1.5px solid #d97706;border-radius:12px;padding:14px;position:relative;">
+          <div style="position:absolute;top:8px;right:8px;background:#d97706;color:#000;font-size:0.6rem;font-weight:800;padding:2px 7px;border-radius:10px;">⚠️ แพงกว่าตลาด +${Math.abs(a.disc)}%</div>
+          <strong style="font-size:0.88rem;">${a.name}</strong>
+          ${priceBlock}
+          <div style="font-size:0.68rem;color:#d97706;margin-bottom:6px;">ราคาประมูลสูงกว่าราคาตั้งขายปกติ — ควรซื้อแบบปกติแทน</div>
+          <div class="chip-rarity">${a.cardNo} • ${a.rarity}</div>
+          ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;text-align:center;padding:5px;background:rgba(217,119,6,0.15);color:#d97706;border:1px solid #d97706;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;">ดูรายการ (ระวัง)</a>` : ''}
+        </div>`;
+    } else if (isDeal) {
+      const savingBaht = (a.ref - a.openPrice).toLocaleString();
       return `
         <div class="auction-chip-deal">
-          <div class="deal-badge">-${a.disc}% ต่ำกว่าตลาด</div>
+          <div class="deal-badge">-${a.disc}% ต่ำกว่าตั้งขาย</div>
           <strong>${a.name}</strong>
-          <div style="display:flex;align-items:baseline;gap:8px;margin:4px 0;">
-            <span class="chip-price" style="font-size:1rem;color:#ef4444;">เปิด ฿${a.openPrice.toLocaleString()}</span>
-            <span class="deal-market-price">฿${a.marketPrice.toLocaleString()}</span>
-          </div>
-          <div class="deal-saving">💰 ประหยัดได้ ~฿${savingBaht}</div>
+          ${priceBlock}
+          <div class="deal-saving">💰 ประหยัดได้ ~฿${savingBaht} เทียบราคาตั้งขาย</div>
           <div class="chip-rarity" style="margin-top:4px;">${a.cardNo} • ${a.rarity}</div>
           ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;text-align:center;padding:6px;background:#ef4444;color:white;border-radius:6px;font-size:0.78rem;font-weight:700;text-decoration:none;">🔨 เข้าประมูลเลย →</a>` : ''}
         </div>`;
     } else {
-      const discLabel = isMild ? `<span style="color:#fbbf24;font-size:0.72rem;"> ↓${a.disc}%</span>` : '';
+      const discLabel = isMild ? `<span style="color:#4ade80;font-size:0.68rem;"> ↓${a.disc}%</span>` : '';
       return `
         <div class="auction-chip">
           <strong>${a.name}</strong>
-          <div class="chip-price">เปิด ฿${a.openPrice.toLocaleString()}${discLabel}</div>
-          ${a.marketPrice ? `<div style="color:#666;font-size:0.7rem;">ตลาด ฿${a.marketPrice.toLocaleString()}</div>` : ''}
+          ${priceBlock}
+          ${discLabel ? `<div style="font-size:0.7rem;color:#4ade80;margin-bottom:4px;">ต่ำกว่าตั้งขาย ${a.disc}%</div>` : ''}
           <div class="chip-rarity">${a.cardNo} • ${a.rarity}</div>
           ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:6px;text-align:center;padding:5px;background:rgba(217,119,6,0.2);color:#fbbf24;border:1px solid #d97706;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;">🔨 ดูการประมูล →</a>` : ''}
         </div>`;
@@ -1586,8 +1563,6 @@ function mkLinks(c) {
   const thTH = encodeURIComponent(c.name + ' โปเกมอนการ์ด');
   return {
     tcg:     `https://www.tcgthailand.com/?s=${encodeURIComponent(c.nameTh)}`,
-    shopee:  `https://shopee.co.th/search?keyword=${thTH}`,
-    lazada:  `https://www.lazada.co.th/catalog/?q=${thTH}`,
     fb:      `https://www.facebook.com/marketplace/search/?query=${thTH}`,
     line:    `https://line.me/R/ti/g/search`,
   };
@@ -1602,12 +1577,6 @@ function marketplaceBtns(c, compact = false) {
         <a href="${lk.tcg}" target="_blank" rel="noopener"
           title="ซื้อที่ TCGThailand"
           style="background:#1a1200;border:1px solid #FFCB05;color:#FFCB05;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:5px;text-decoration:none;white-space:nowrap;">🏆 TCG</a>
-        <a href="${lk.shopee}" target="_blank" rel="noopener"
-          title="ค้นหาที่ Shopee"
-          style="background:#2a0800;border:1px solid #ee4d2d;color:#ee4d2d;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:5px;text-decoration:none;white-space:nowrap;">🛒 Shopee</a>
-        <a href="${lk.lazada}" target="_blank" rel="noopener"
-          title="ค้นหาที่ Lazada"
-          style="background:#0e0a2a;border:1px solid #7c83ff;color:#a5abff;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:5px;text-decoration:none;white-space:nowrap;">🛍️ Lazada</a>
         <a href="${lk.fb}" target="_blank" rel="noopener"
           title="ค้นหาที่ Facebook Marketplace"
           style="background:#061220;border:1px solid #1877f2;color:#60a5fa;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:5px;text-decoration:none;white-space:nowrap;">📘 FB</a>
@@ -1625,33 +1594,15 @@ function marketplaceBtns(c, compact = false) {
           <span style="font-size:1.3rem;">🏆</span>
           <div>
             <div style="font-size:0.78rem;font-weight:700;color:#FFCB05;">TCGThailand</div>
-            <div style="font-size:0.65rem;color:#a0804a;">ราคาอ้างอิง ฿${c.price.toLocaleString()}</div>
+            <div style="font-size:0.65rem;color:#a0804a;">ตั้งขาย ฿${c.price.toLocaleString()}</div>
           </div>
           <span style="margin-left:auto;font-size:0.7rem;color:#FFCB05;">→</span>
-        </a>
-        <a href="${lk.shopee}" target="_blank" rel="noopener"
-          style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#200800,#2e0d00);border:1.5px solid #ee4d2d;border-radius:9px;padding:10px 12px;text-decoration:none;transition:filter 0.15s;" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter=''">
-          <span style="font-size:1.3rem;">🛒</span>
-          <div>
-            <div style="font-size:0.78rem;font-weight:700;color:#ee4d2d;">Shopee</div>
-            <div style="font-size:0.65rem;color:#994433;">อาจถูกกว่า ~5–10%</div>
-          </div>
-          <span style="margin-left:auto;font-size:0.7rem;color:#ee4d2d;">→</span>
-        </a>
-        <a href="${lk.lazada}" target="_blank" rel="noopener"
-          style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#080a20,#100f30);border:1.5px solid #7c83ff;border-radius:9px;padding:10px 12px;text-decoration:none;transition:filter 0.15s;" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter=''">
-          <span style="font-size:1.3rem;">🛍️</span>
-          <div>
-            <div style="font-size:0.78rem;font-weight:700;color:#a5abff;">Lazada</div>
-            <div style="font-size:0.65rem;color:#6068bb;">เน้นกล่อง/ซอง</div>
-          </div>
-          <span style="margin-left:auto;font-size:0.7rem;color:#a5abff;">→</span>
         </a>
         <a href="${lk.fb}" target="_blank" rel="noopener"
           style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#030f1e,#061528);border:1.5px solid #1877f2;border-radius:9px;padding:10px 12px;text-decoration:none;transition:filter 0.15s;" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter=''">
           <span style="font-size:1.3rem;">📘</span>
           <div>
-            <div style="font-size:0.78rem;font-weight:700;color:#60a5fa;">Facebook</div>
+            <div style="font-size:0.78rem;font-weight:700;color:#60a5fa;">Facebook Group</div>
             <div style="font-size:0.65rem;color:#3a6090;">ต่อรองได้ −10–15%</div>
           </div>
           <span style="margin-left:auto;font-size:0.7rem;color:#60a5fa;">→</span>
@@ -1687,105 +1638,6 @@ function showCard(id) {
 function closeModal() { document.getElementById('cardModal').classList.remove('open'); }
 document.getElementById('cardModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
 
-// =================== COMPARE DATA (scraped June 2026) ===================
-const platforms = [
-  { name:'TCGThailand.com', icon:'🏆', color:'#FFCB05', type:'ตลาดการ์ดเฉพาะทาง', singles:true, boxes:true, auctions:true, note:'ราคาตลาดโปร่งใส อ้างอิงได้ มีประมูล' },
-  { name:'Shopee', icon:'🛒', color:'#ee4d2d', type:'E-commerce', singles:false, boxes:true, auctions:false, note:'เหมาะซื้อกล่อง/ซอง มีโปรโมชั่น ฿990–฿2,500' },
-  { name:'Lazada', icon:'🛍️', color:'#7c83ff', type:'E-commerce', singles:false, boxes:true, auctions:false, note:'มีกล่องบูสเตอร์ ราคาใกล้เคียง Shopee ~฿2,000' },
-  { name:'Facebook Groups', icon:'📘', color:'#1877f2', type:'Social Marketplace', singles:true, boxes:true, auctions:false, note:'ต่อรองราคาได้ ถูกกว่าตลาด ~10-15% แต่ต้องระวังของปลอม' },
-];
-
-const boxPrices = [
-  { item:'บูสเตอร์ซอง MA5 T (1 ซอง)', tcg:'~฿65', shopee:'ไม่มีแยก', lazada:'ไม่มีแยก', lowest:'฿65', note:'TCGThailand มีขาย' },
-  { item:'ชุด 2 ซอง MA5 T', tcg:'—', shopee:'฿109', lazada:'—', lowest:'฿109', note:'Shopee' },
-  { item:'ชุด Plus 10 ซอง (MA5-P)', tcg:'—', shopee:'฿990–฿1,290', lazada:'—', lowest:'฿990', note:'Shopee หลายร้าน' },
-  { item:'กล่องบูสเตอร์ 30 ซอง (MA5 T)', tcg:'฿1,750', shopee:'฿1,960–฿2,500', lazada:'฿2,000', lowest:'฿1,750', note:'TCGThailand ราคาต่ำสุด' },
-  { item:'กล่อง MA5 + SV5M รวม', tcg:'—', shopee:'฿1,690', lazada:'—', lowest:'฿1,690', note:'Shopee (หลายเซตรวมกัน)' },
-];
-
-const singleCompare = [
-  { card:'เมก้าดาร์กไรex MUR 238/164', idx:0, rarity:'MUR', tcg:9050, facebook:'7,500–8,500', note:'ตลาด secondhand ผ่าน FB/LINE เท่านั้น' },
-  { card:'เมก้าเก็คโคกะex MUR 237/164', idx:4, rarity:'MUR', tcg:5000, facebook:'4,200–4,800', note:'หายากมาก ตลาดเฉพาะทาง' },
-  { card:'เมก้าดาร์กไรex SAR 229/164', idx:1, rarity:'SAR', tcg:6050, facebook:'5,000–5,500', note:'ราคาขึ้นต่อเนื่อง' },
-  { card:'เมก้าเก็คโคกะex SAR 225/164', idx:2, rarity:'SAR', tcg:5000, facebook:'4,300–4,700', note:'ยอดนิยมสูง' },
-  { card:'โมรุเปโกะex SAR 230/164', idx:3, rarity:'SAR', tcg:5000, facebook:'4,000–4,500', note:'เทรนด์ขาขึ้น' },
-  { card:'เมก้าแชนเดลาex SAR 227/164', idx:5, rarity:'SAR', tcg:1140, facebook:'900–1,100', note:'ราคาค่อนข้างนิ่ง' },
-  { card:'ความสงบของ AZ SAR 233/164', idx:6, rarity:'SAR', tcg:930, facebook:'750–900', note:'Supporter card ยอดนิยม' },
-  { card:'เมก้าโดริวซึex SR 201/164', idx:7, rarity:'SR', tcg:785, facebook:'650–750', note:'SR ราคาเสถียร' },
-  { card:'มูคุ SR 222/164', idx:18, rarity:'SR', tcg:600, facebook:'500–580', note:'Supporter ทรงพลัง' },
-  { card:'ยาโดรัน AR 175/164', idx:10, rarity:'AR', tcg:570, facebook:'450–550', note:'AR ยอดนิยม' },
-];
-
-function renderPlatforms() {
-  document.getElementById('platformGrid').innerHTML = platforms.map(p => `
-    <div style="background:var(--card-bg);border:2px solid ${p.color}44;border-radius:12px;padding:18px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <span style="font-size:1.6rem">${p.icon}</span>
-        <div>
-          <div style="font-weight:800;font-size:1rem;color:${p.color}">${p.name}</div>
-          <div style="font-size:0.78rem;color:var(--muted)">${p.type}</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-        <span style="background:${p.singles?'rgba(46,204,113,0.15)':'rgba(255,255,255,0.05)'};color:${p.singles?'#2ecc71':'var(--muted)'};border:1px solid ${p.singles?'#2ecc71':'var(--card-border)'};padding:2px 8px;border-radius:20px;font-size:0.73rem">${p.singles?'✓':'✗'} การ์ดแยกใบ</span>
-        <span style="background:${p.boxes?'rgba(52,152,219,0.15)':'rgba(255,255,255,0.05)'};color:${p.boxes?'#3498db':'var(--muted)'};border:1px solid ${p.boxes?'#3498db':'var(--card-border)'};padding:2px 8px;border-radius:20px;font-size:0.73rem">${p.boxes?'✓':'✗'} กล่อง/ซอง</span>
-        <span style="background:${p.auctions?'rgba(255,203,5,0.15)':'rgba(255,255,255,0.05)'};color:${p.auctions?'var(--secondary)':'var(--muted)'};border:1px solid ${p.auctions?'var(--secondary)':'var(--card-border)'};padding:2px 8px;border-radius:20px;font-size:0.73rem">${p.auctions?'✓':'✗'} ประมูล</span>
-      </div>
-      <div style="font-size:0.82rem;color:#c5c5c5">${p.note}</div>
-    </div>
-  `).join('');
-}
-
-function renderBoxPrices() {
-  document.getElementById('boxPriceBody').innerHTML = boxPrices.map(b => `<tr>
-    <td style="font-weight:600">${b.item}</td>
-    <td style="color:${b.tcg!=='—'?'#fbbf24':'var(--muted)'};font-weight:${b.tcg!=='—'?700:400}">${b.tcg}</td>
-    <td style="color:${b.shopee!=='ไม่มีแยก'&&b.shopee!=='—'?'#ee4d2d':'var(--muted)'}">${b.shopee}</td>
-    <td style="color:${b.lazada!=='—'?'#7c83ff':'var(--muted)'}">${b.lazada}</td>
-    <td style="font-weight:800;color:#2ecc71">${b.lowest}</td>
-    <td style="font-size:0.82rem;color:var(--muted)">${b.note}</td>
-  </tr>`).join('');
-}
-
-function renderSingleCompare() {
-  document.getElementById('singleCompareGrid').innerHTML = singleCompare.map(c => {
-    const cardData = cards[c.idx];
-    const fbLow = parseInt(c.facebook.replace(/,/g,'').split('–')[0]);
-    const saving = c.tcg - fbLow;
-    return `
-    <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
-      <img src="${cardData.img}" alt="${c.card}" style="width:56px;height:78px;object-fit:cover;border-radius:6px;border:1px solid var(--card-border);flex-shrink:0;cursor:pointer" onclick="showCard(${cardData.id})">
-      <div style="flex:1;min-width:180px">
-        <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px">${c.card}</div>
-        <span class="rarity-badge rarity-${c.rarity}">${c.rarity}</span>
-        <div style="font-size:0.78rem;color:var(--muted);margin-top:5px">💡 ${c.note}</div>
-      </div>
-      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-        <div style="text-align:center">
-          <div style="font-size:0.7rem;color:#FFCB05;margin-bottom:3px;font-weight:600">🏆 TCGThailand</div>
-          <div style="font-weight:800;color:#fbbf24;font-size:1.1rem">฿${c.tcg.toLocaleString()}</div>
-        </div>
-        <div style="text-align:center;opacity:0.5">
-          <div style="font-size:0.7rem;color:#ee4d2d;margin-bottom:3px">🛒 Shopee</div>
-          <div style="color:var(--muted);font-size:0.85rem">ไม่มี</div>
-        </div>
-        <div style="text-align:center;opacity:0.5">
-          <div style="font-size:0.7rem;color:#7c83ff;margin-bottom:3px">🛍️ Lazada</div>
-          <div style="color:var(--muted);font-size:0.85rem">ไม่มี</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:0.7rem;color:#60a5fa;margin-bottom:3px;font-weight:600">📘 Facebook</div>
-          <div style="color:#60a5fa;font-size:0.92rem;font-weight:700">฿${c.facebook}</div>
-        </div>
-        <div style="background:rgba(46,204,113,0.12);border:1px solid #2ecc71;border-radius:8px;padding:8px 14px;text-align:center">
-          <div style="font-size:0.68rem;color:#2ecc71;margin-bottom:2px">ประหยัดได้สูงสุด</div>
-          <div style="font-weight:800;color:#2ecc71;font-size:1rem">฿${saving.toLocaleString()}</div>
-          <div style="font-size:0.68rem;color:var(--muted)">(vs TCGThailand)</div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
 
 // ===================== DECKS DATA =====================
 const decks = [
@@ -3077,7 +2929,6 @@ function switchTab(tab) {
   document.getElementById('tab-'+tab).classList.add('active');
   event.target.classList.add('active');
   if (tab === 'sales') renderSalesCharts();
-  if (tab === 'compare') { renderPlatforms(); renderBoxPrices(); renderSingleCompare(); }
   if (tab === 'decks') renderDecks();
   if (tab === 'prices' && !priceTabLoaded) { priceTabLoaded = true; fetchLivePrices(); }
 }
