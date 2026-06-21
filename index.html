@@ -1,0 +1,3445 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎴 Pokémon TCG Thailand Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap');
+
+  :root {
+    --primary: #E3350D;
+    --secondary: #FFCB05;
+    --dark: #1a1a2e;
+    --card-bg: #16213e;
+    --card-border: #0f3460;
+    --text: #e0e0e0;
+    --muted: #888;
+    --green: #2ecc71;
+    --blue: #3498db;
+    --purple: #9b59b6;
+    --orange: #e67e22;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #0f3460 0%, #16213e 50%, #1a1a2e 100%);
+    border-bottom: 3px solid var(--secondary);
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .header-left { display: flex; align-items: center; gap: 15px; }
+  .logo-ball {
+    width: 50px; height: 50px;
+    background: linear-gradient(180deg, var(--primary) 50%, white 50%);
+    border-radius: 50%;
+    border: 3px solid var(--secondary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: bold; color: #333;
+    position: relative;
+    box-shadow: 0 0 20px rgba(255,203,5,0.4);
+    flex-shrink: 0;
+  }
+  .logo-ball::after {
+    content: '';
+    width: 12px; height: 12px;
+    background: white;
+    border-radius: 50%;
+    border: 2px solid #333;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .header h1 { font-size: 1.6rem; font-weight: 800; color: var(--secondary); line-height: 1.2; }
+  .header h1 span { color: var(--primary); }
+  .header-subtitle { font-size: 0.8rem; color: var(--muted); }
+  .live-badge {
+    background: var(--primary);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  /* NAV TABS */
+  .nav-tabs {
+    display: flex;
+    background: var(--card-bg);
+    border-bottom: 2px solid var(--card-border);
+    overflow-x: auto;
+  }
+  .nav-tab {
+    padding: 14px 24px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    color: var(--muted);
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .nav-tab:hover { color: var(--secondary); }
+  .nav-tab.active { color: var(--secondary); border-bottom-color: var(--secondary); }
+
+  /* CONTENT */
+  .content { padding: 25px 30px; max-width: 1400px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+  }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-icon { font-size: 2rem; margin-bottom: 8px; }
+  .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--secondary); }
+  .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-bar input, .filter-bar select {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.9rem;
+  }
+  .filter-bar input { flex: 1; min-width: 200px; }
+  .filter-bar input:focus, .filter-bar select:focus {
+    outline: none;
+    border-color: var(--secondary);
+  }
+
+  /* CARD TABLE */
+  .card-table-wrap { overflow-x: auto; }
+  .card-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .card-table th {
+    background: var(--card-border);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 700;
+    color: var(--secondary);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .card-table th:hover { background: #1e4a7a; }
+  .card-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    vertical-align: middle;
+  }
+  .card-table tr:hover td { background: rgba(255,203,5,0.05); }
+  .card-table tr:last-child td { border-bottom: none; }
+
+  .rarity-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .rarity-SR { background: #2c1a4a; color: #c084fc; border: 1px solid #9b59b6; }
+  .rarity-SAR { background: #1a3a4a; color: #67e8f9; border: 1px solid #0891b2; }
+  .rarity-AR { background: #2a3a1a; color: #86efac; border: 1px solid #16a34a; }
+  .rarity-RR { background: #3a2a1a; color: #fbbf24; border: 1px solid #d97706; }
+  .rarity-R { background: #3a1a1a; color: #f87171; border: 1px solid #dc2626; }
+  .rarity-UR { background: #3a1a3a; color: #f0abfc; border: 1px solid #a21caf; }
+  .rarity-MUR { background: #2a1a3a; color: #fde68a; border: 1px solid #d97706; }
+  .rarity-Box { background: #1a2a3a; color: #93c5fd; border: 1px solid #2563eb; }
+
+  .price-tag { font-weight: 700; color: #fbbf24; }
+  .trend-up { color: var(--green); }
+  .trend-down { color: var(--primary); }
+  .trend-flat { color: var(--muted); }
+
+  .type-icon {
+    display: inline-block;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 22px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  .type-fire { background: #e74c3c; color: white; }
+  .type-water { background: #3498db; color: white; }
+  .type-grass { background: #27ae60; color: white; }
+  .type-electric { background: #f1c40f; color: #333; }
+  .type-psychic { background: #9b59b6; color: white; }
+  .type-dragon { background: #1a5276; color: #67e8f9; }
+  .type-dark { background: #2c3e50; color: #bdc3c7; }
+  .type-steel { background: #7f8c8d; color: white; }
+  .type-normal { background: #95a5a6; color: #2c3e50; }
+  .type-fighting { background: #a04000; color: white; }
+  .type-colorless { background: #ccc; color: #333; }
+
+  /* CHARTS */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 25px;
+  }
+  @media(max-width: 900px){ .charts-grid{ grid-template-columns:1fr; } }
+  .chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .chart-card canvas { max-height: 300px; }
+
+  /* GUIDE */
+  .guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+  }
+  .guide-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 22px;
+  }
+  .guide-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--secondary);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .guide-card p, .guide-card li {
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: #c5c5c5;
+  }
+  .guide-card ul { padding-left: 18px; }
+  .guide-card li { margin-bottom: 6px; }
+
+  .card-anatomy {
+    background: linear-gradient(135deg, var(--card-bg), #0f3460);
+    border: 2px solid var(--secondary);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  .card-anatomy .zone {
+    background: rgba(255,203,5,0.1);
+    border: 1px dashed var(--secondary);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+  }
+  .card-anatomy .zone strong { color: var(--secondary); }
+
+  .phase-list { counter-reset: phase; }
+  .phase-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .phase-num {
+    background: var(--primary);
+    color: white;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .phase-text strong { color: var(--secondary); display: block; margin-bottom: 2px; }
+  .phase-text span { font-size: 0.85rem; color: #c5c5c5; }
+
+  .energy-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .energy-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.85rem;
+  }
+
+  /* TOP SELLERS */
+  .top-sellers-list { display: flex; flex-direction: column; gap: 10px; }
+  .seller-item {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .seller-rank {
+    font-size: 1.4rem; font-weight: 800;
+    color: var(--muted); min-width: 35px;
+  }
+  .seller-rank.gold { color: #FFD700; }
+  .seller-rank.silver { color: #C0C0C0; }
+  .seller-rank.bronze { color: #CD7F32; }
+  .seller-info { flex: 1; }
+  .seller-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 3px; }
+  .seller-set { font-size: 0.8rem; color: var(--muted); }
+  .seller-bar-wrap { width: 150px; }
+  .seller-bar-bg { background: rgba(255,255,255,0.1); border-radius: 10px; height: 8px; }
+  .seller-bar { background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 10px; height: 8px; }
+  .seller-sold { font-weight: 700; color: var(--secondary); min-width: 60px; text-align: right; font-size: 0.9rem; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .modal-close {
+    position: absolute; top: 15px; right: 15px;
+    background: none; border: none;
+    color: var(--muted); font-size: 1.5rem;
+    cursor: pointer; line-height: 1;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal h2 { font-size: 1.2rem; color: var(--secondary); margin-bottom: 15px; }
+  .modal-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; }
+  .modal-row:last-child { border-bottom: none; }
+  .modal-row span:first-child { color: var(--muted); }
+  .modal-row span:last-child { font-weight: 600; }
+
+  /* VIEW TOGGLE */
+  .view-toggle { display:flex; gap:8px; margin-bottom:16px; }
+  .view-btn {
+    padding: 8px 18px; border-radius:8px; border:1px solid var(--card-border);
+    background:var(--card-bg); color:var(--muted); cursor:pointer;
+    font-family:'Sarabun',sans-serif; font-size:0.88rem; font-weight:600;
+    transition: all 0.2s;
+  }
+  .view-btn.active { background:var(--secondary); color:#1a1a2e; border-color:var(--secondary); }
+
+  /* GALLERY VIEW */
+  .card-gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:16px; }
+  .gallery-card {
+    background:var(--card-bg); border:1px solid var(--card-border);
+    border-radius:12px; overflow:hidden; cursor:pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .gallery-card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(255,203,5,0.2); border-color:var(--secondary); }
+  .gallery-card img {
+    width:100%; aspect-ratio:5/7; object-fit:cover; display:block;
+    background:#0f3460;
+  }
+  .gallery-card-info { padding:10px 12px; }
+  .gallery-card-name { font-size:0.78rem; font-weight:700; margin-bottom:4px; line-height:1.3; }
+  .gallery-card-price { color:#fbbf24; font-weight:800; font-size:0.9rem; }
+  .gallery-card-rarity { float:right; }
+
+  /* THUMBNAIL in table */
+  .card-thumb {
+    width:40px; height:56px; object-fit:cover; border-radius:4px;
+    border:1px solid var(--card-border); vertical-align:middle;
+    cursor:pointer; transition:transform 0.2s;
+  }
+  .card-thumb:hover { transform:scale(1.5); z-index:10; position:relative; }
+
+  /* MODAL image */
+  .modal-img { width:180px; border-radius:10px; margin:0 auto 16px; display:block; box-shadow:0 4px 20px rgba(0,0,0,0.5); }
+
+  /* DECK TAB STYLES */
+  .deck-type-btn {
+    padding:8px 18px; border-radius:20px; border:2px solid var(--card-border);
+    background:var(--card-bg); color:var(--text); cursor:pointer;
+    font-family:'Sarabun',sans-serif; font-size:0.9rem; font-weight:600;
+    transition:all 0.2s;
+  }
+  .deck-type-btn:hover { border-color:var(--secondary); color:var(--secondary); }
+  .deck-type-btn.active { background:var(--secondary); color:#1a1a2e; border-color:var(--secondary); }
+  .deck-card {
+    background:var(--card-bg); border-radius:14px; border:1px solid var(--card-border);
+    overflow:hidden; transition:transform 0.2s,box-shadow 0.2s; cursor:pointer;
+  }
+  .deck-card:hover { transform:translateY(-4px); box-shadow:0 8px 28px rgba(255,203,5,0.2); }
+  .deck-card-header {
+    padding:14px 16px 10px; display:flex; align-items:center; gap:10px;
+    border-bottom:1px solid var(--card-border);
+  }
+  .deck-type-icon { font-size:1.6rem; }
+  .deck-name { font-size:1rem; font-weight:700; }
+  .deck-tier {
+    margin-left:auto; padding:3px 10px; border-radius:12px;
+    font-size:0.75rem; font-weight:700;
+  }
+  .tier-S { background:#FFD700; color:#1a1a2e; }
+  .tier-A { background:#3498db; color:white; }
+  .tier-B { background:#2ecc71; color:#1a1a2e; }
+  .tier-C { background:#888; color:white; }
+  .deck-card-body { padding:12px 16px; }
+  .deck-strategy { font-size:0.82rem; color:var(--muted); margin-bottom:10px; line-height:1.4; }
+  .deck-tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px; }
+  .deck-tag {
+    padding:2px 9px; border-radius:10px; font-size:0.72rem;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+  }
+  .deck-meta { display:flex; gap:12px; font-size:0.78rem; color:var(--muted); margin-bottom:12px; }
+  .deck-meta span { display:flex; align-items:center; gap:3px; }
+  .deck-win-bar { height:5px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden; }
+  .deck-win-fill { height:100%; border-radius:3px; transition:width 0.6s; }
+  .deck-card-footer { padding:8px 16px 14px; }
+  .deck-view-btn {
+    width:100%; padding:8px; border-radius:8px; border:1px solid var(--card-border);
+    background:rgba(255,203,5,0.08); color:var(--secondary); cursor:pointer;
+    font-family:'Sarabun',sans-serif; font-size:0.85rem; font-weight:600;
+    transition:background 0.2s;
+  }
+  .deck-view-btn:hover { background:rgba(255,203,5,0.18); }
+  .decklist-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .decklist-section h4 { font-size:0.82rem; color:var(--secondary); margin-bottom:6px; }
+  .decklist-item { font-size:0.8rem; display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .type-badge { display:inline-block; padding:2px 8px; border-radius:8px; font-size:0.72rem; font-weight:700; }
+  .type-dark { background:#2d1b4e; color:#c084fc; border:1px solid #7c3aed; }
+  .type-water { background:#0c2a4a; color:#60a5fa; border:1px solid #2563eb; }
+  .type-electric { background:#2d2600; color:#fbbf24; border:1px solid #d97706; }
+  .type-fire { background:#3d1205; color:#fb923c; border:1px solid #ea580c; }
+  /* deck modal tab active state */
+  #dtab-visual.active, #dtab-list.active { color:white !important; background:rgba(255,255,255,0.12) !important; }
+
+  .auction-section {
+    background: var(--card-bg);
+    border: 1px solid #d97706;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-top: 20px;
+  }
+  .auction-section h3 { color: #fbbf24; margin-bottom: 12px; font-size: 0.95rem; }
+  .auction-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .auction-chip {
+    background: rgba(217,119,6,0.1); border: 1px solid #d97706;
+    border-radius: 8px; padding: 10px 12px; font-size: 0.82rem;
+  }
+  .auction-chip strong { color: #fbbf24; display: block; margin-bottom: 3px; }
+  .auction-chip .chip-price { color: var(--green); font-weight: 700; }
+  .auction-chip .chip-rarity { color: var(--muted); font-size: 0.75rem; }
+
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--card-border);
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-ball"></div>
+    <div>
+      <h1>Pokémon <span>TCG</span> Thailand</h1>
+      <div class="header-subtitle">เซต: เงามืดคุกคาม (MA5 T) • ราคาการ์ด • ยอดขาย • คู่มือเล่นเกม | TCGThailand.com</div>
+    </div>
+  </div>
+  <div class="live-badge">🔴 LIVE PRICES</div>
+</div>
+
+<!-- NAV -->
+<div class="nav-tabs">
+  <div class="nav-tab active" onclick="switchTab('prices')">💰 ราคาการ์ด</div>
+  <div class="nav-tab" onclick="switchTab('compare')">🔍 เปรียบเทียบราคา</div>
+  <div class="nav-tab" onclick="switchTab('decks')">🃏 จัดเด็ค</div>
+  <div class="nav-tab" onclick="switchTab('sales')">📊 ยอดขาย</div>
+  <div class="nav-tab" onclick="switchTab('guide')">📖 วิธีเล่น</div>
+  <div class="nav-tab" onclick="switchTab('collection')" style="background:linear-gradient(135deg,rgba(46,204,113,0.15),rgba(39,174,96,0.08));border-color:rgba(46,204,113,0.4);">📦 คอลเล็กชัน</div>
+  <div class="nav-tab" onclick="switchTab('trade')" style="background:linear-gradient(135deg,rgba(52,152,219,0.15),rgba(41,128,185,0.08));border-color:rgba(52,152,219,0.4);">🔄 เทรด</div>
+</div>
+
+<!-- PRICES TAB -->
+<div class="content">
+<div id="tab-prices" class="tab-panel active">
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon">🃏</div>
+      <div class="stat-value">240+</div>
+      <div class="stat-label">รายการในตลาด</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💎</div>
+      <div class="stat-value">฿9,050</div>
+      <div class="stat-label">ราคาสูงสุด (MUR)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📈</div>
+      <div class="stat-value">+8%</div>
+      <div class="stat-label">แนวโน้มราคา</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-value">เมก้าเก็คโคกะex</div>
+      <div class="stat-label">การ์ดยอดนิยม</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🛒</div>
+      <div class="stat-value">32</div>
+      <div class="stat-label">ประมูลอยู่ตอนนี้</div>
+    </div>
+  </div>
+
+  <div class="view-toggle">
+    <button class="view-btn active" id="btnTable" onclick="switchView('table')">📋 ตาราง</button>
+    <button class="view-btn" id="btnGallery" onclick="switchView('gallery')">🖼️ แกลเลอรี่</button>
+  </div>
+
+  <div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="🔍 ค้นหาชื่อการ์ด..." oninput="filterCards()">
+    <select id="typeFilter" onchange="filterCards()">
+      <option value="">ทุกประเภท</option>
+      <option value="fire">🔥 ไฟ</option>
+      <option value="water">💧 น้ำ</option>
+      <option value="grass">🌿 หญ้า</option>
+      <option value="electric">⚡ ไฟฟ้า</option>
+      <option value="psychic">🔮 จิต</option>
+      <option value="dragon">🐉 มังกร</option>
+      <option value="dark">🌑 มืด</option>
+      <option value="steel">⚙️ เหล็ก</option>
+      <option value="fighting">🥊 ต่อสู้</option>
+    </select>
+    <select id="rarityFilter" onchange="filterCards()">
+      <option value="">ทุก Rarity</option>
+      <option value="MUR">MUR (Mega Ultra Rare)</option>
+      <option value="SAR">SAR (Special Art Rare)</option>
+      <option value="SR">SR (Super Rare)</option>
+      <option value="AR">AR (Art Rare)</option>
+      <option value="RR">RR (Double Rare)</option>
+      <option value="Box">Box (สินค้า Sealed)</option>
+    </select>
+    <select id="sortSelect" onchange="sortCards()">
+      <option value="price_desc">ราคา: สูง → ต่ำ</option>
+      <option value="price_asc">ราคา: ต่ำ → สูง</option>
+      <option value="name_asc">ชื่อ: ก → ฮ</option>
+    </select>
+    <button id="refreshPriceBtn" onclick="fetchLivePrices()"
+      style="background:linear-gradient(135deg,#0f2a5e,#1d4ed8);color:#93c5fd;border:1.5px solid #3b82f6;padding:7px 16px;border-radius:8px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:0.82rem;font-weight:700;white-space:nowrap;">
+      🔄 ราคา USD Live
+    </button>
+    <span id="liveTs" style="font-size:0.72rem;color:var(--muted);white-space:nowrap;"></span>
+  </div>
+
+  <div id="galleryView" class="card-gallery" style="display:none"></div>
+
+  <div id="tableView" class="card-table-wrap">
+    <table class="card-table" id="cardTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th onclick="sortBy('name')">ชื่อการ์ด ↕</th>
+          <th>เลขการ์ด</th>
+          <th>ประเภท</th>
+          <th onclick="sortBy('rarity')">Rarity ↕</th>
+          <th onclick="sortBy('price')">ราคา (฿) / USD ↕</th>
+          <th>เทรนด์</th>
+          <th>รายละเอียด</th>
+        </tr>
+      </thead>
+      <tbody id="cardTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="auction-section" style="margin-top:20px">
+    <h3>🔨 ประมูลที่กำลังเปิดอยู่ — เงามืดคุกคาม (MA5 T) | TCGThailand.com</h3>
+    <div class="auction-grid" id="auctionGrid"></div>
+  </div>
+</div>
+
+<!-- COMPARE TAB -->
+<div id="tab-compare" class="tab-panel">
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-icon">🌐</div><div class="stat-value">4</div><div class="stat-label">แพลตฟอร์มที่ค้นหา</div></div>
+    <div class="stat-card"><div class="stat-icon">💎</div><div class="stat-value">TCGThailand</div><div class="stat-label">ตลาดการ์ดหายากที่ดีที่สุด</div></div>
+    <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value">Shopee / Lazada</div><div class="stat-label">เหมาะกับซื้อกล่อง/ซอง</div></div>
+    <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value">มิ.ย. 2026</div><div class="stat-label">ข้อมูล ณ เดือน</div></div>
+  </div>
+
+  <!-- Platform Overview -->
+  <div class="section-title">🏪 แพลตฟอร์มที่หาราคาได้</div>
+  <div id="platformGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:28px"></div>
+
+  <!-- Box Price Comparison -->
+  <div class="section-title">📦 เปรียบเทียบราคา กล่อง/ซอง เงามืดคุกคาม (MA5 T)</div>
+  <div style="overflow-x:auto;margin-bottom:28px">
+    <table class="card-table" id="boxPriceTable">
+      <thead><tr>
+        <th>สินค้า</th>
+        <th>TCGThailand</th>
+        <th>Shopee</th>
+        <th>Lazada</th>
+        <th>ราคาต่ำสุด</th>
+        <th>หมายเหตุ</th>
+      </tr></thead>
+      <tbody id="boxPriceBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Single Card Price Comparison -->
+  <div class="section-title">🃏 เปรียบเทียบราคา การ์ดแยกใบ (เซต เงามืดคุกคาม MA5 T)</div>
+  <div id="singleCompareGrid" style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px"></div>
+
+  <!-- Platform Guide -->
+  <div class="section-title">📌 แนะนำ: ซื้อการ์ดแบบไหน ที่ไหนดี?</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+    <div class="guide-card">
+      <h3>💎 การ์ดหายาก (MUR/SAR)</h3>
+      <ul>
+        <li><strong>TCGThailand.com</strong> — ราคาตลาดโปร่งใส มีระบบประมูล</li>
+        <li><strong>Facebook Groups</strong> — "ซื้อขายการ์ดโปเกมอนไทย" ราคาต่อรองได้ ถูกกว่า ~10%</li>
+        <li><strong>LINE OA ร้านค้า</strong> — ร้านเฉพาะทาง บางทีมีสต็อก</li>
+        <li>⚠️ Shopee/Lazada มีน้อยและไม่ค่อยตรงชนิด</li>
+      </ul>
+    </div>
+    <div class="guide-card">
+      <h3>📦 กล่อง/ซองใหม่ (Sealed)</h3>
+      <ul>
+        <li><strong>Shopee</strong> — ราคาแข่งขัน ฿990–฿2,500 มีโปรโมชั่น</li>
+        <li><strong>Lazada</strong> — กล่องบูสเตอร์ ~฿2,000</li>
+        <li><strong>TCGThailand</strong> — มีกล่อง ฿1,750+</li>
+        <li><strong>ร้านค้าออฟไลน์</strong> — OjamaCard, ร้านการ์ดในศูนย์การค้า</li>
+      </ul>
+    </div>
+    <div class="guide-card">
+      <h3>🌍 ตลาดต่างประเทศ (English)</h3>
+      <ul>
+        <li><strong>TCGPlayer.com</strong> — US market ราคา USD ไม่มีภาษาไทย</li>
+        <li><strong>eBay</strong> — มีการ์ดญี่ปุ่น/English ส่งมาไทย</li>
+        <li><strong>ThaïPKMN.shop</strong> — ขายการ์ดไทยให้ต่างชาติ</li>
+        <li>⚠️ ต้องคิดค่าส่งและภาษีนำเข้า</li>
+      </ul>
+    </div>
+    <div class="guide-card">
+      <h3>🔑 เคล็ดลับเปรียบเทียบราคา</h3>
+      <ul>
+        <li>เช็ค TCGThailand ก่อนเสมอ เพราะใช้ราคาตลาดจริง</li>
+        <li>ดูประวัติการขายจริง ไม่ใช่แค่ราคาตั้ง</li>
+        <li>การ์ด Near Mint (NM) ราคาสูงกว่า Light Play (LP) ~20%</li>
+        <li>ฤดูกาล: ราคาขึ้นหลัง set ใหม่ออก 1-2 สัปดาห์</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- DECKS TAB -->
+<div id="tab-decks" class="tab-panel">
+
+  <div class="section-title" style="text-align:center;margin-bottom:8px;">🃏 เด็คยอดนิยม แยกตามธาตุ</div>
+  <div style="text-align:center;color:var(--muted);font-size:0.85rem;margin-bottom:20px;">ข้อมูลอิงจาก Limitless TCG Meta 2026 · 4 ธาตุ × 5 เด็ค = 20 เด็คยอดนิยม</div>
+
+  <!-- Type Filter Tabs -->
+  <div id="deckTypeFilter" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;justify-content:center;">
+    <button class="deck-type-btn active" onclick="filterDeckType('all')" data-type="all">⭐ ทั้งหมด</button>
+    <button class="deck-type-btn" onclick="filterDeckType('dark')" data-type="dark">🌑 ความมืด</button>
+    <button class="deck-type-btn" onclick="filterDeckType('water')" data-type="water">💧 น้ำ</button>
+    <button class="deck-type-btn" onclick="filterDeckType('electric')" data-type="electric">⚡ ไฟฟ้า</button>
+    <button class="deck-type-btn" onclick="filterDeckType('fire')" data-type="fire">🔥 ไฟ</button>
+  </div>
+
+  <div id="deckGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;"></div>
+
+  <!-- Deck Detail Modal -->
+  <!-- Card Zoom Carousel Lightbox -->
+  <div id="cardZoom" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.96);backdrop-filter:blur(10px);flex-direction:column;align-items:center;justify-content:center;">
+
+    <!-- Top bar -->
+    <div style="position:absolute;top:0;left:0;right:0;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(rgba(0,0,0,0.7),transparent);">
+      <div>
+        <div id="zoomCardName" style="color:#f3f4f6;font-size:1rem;font-weight:700;"></div>
+        <div id="zoomCardSub" style="color:#6b7280;font-size:0.72rem;margin-top:2px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div id="zoomCounter" style="color:#9ca3af;font-size:0.85rem;background:rgba(255,255,255,0.08);padding:4px 12px;border-radius:999px;"></div>
+        <button onclick="closeZoom()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#e5e7eb;font-size:1.1rem;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+    </div>
+
+    <!-- Carousel -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;width:100%;padding:0 80px;box-sizing:border-box;">
+      <!-- Prev button -->
+      <button id="zoomPrevBtn" onclick="zoomNav(-1)" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);color:#e5e7eb;font-size:1.4rem;width:48px;height:48px;border-radius:50%;cursor:pointer;flex-shrink:0;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">◀</button>
+
+      <!-- Side card (prev) -->
+      <div id="zoomSidePrev" style="flex-shrink:0;opacity:0.45;transform:scale(0.72) translateX(20px);transform-origin:right center;transition:all 0.25s;cursor:pointer;" onclick="zoomNav(-1)">
+        <img id="zoomImgPrev" src="" style="height:52vh;max-width:160px;object-fit:contain;border-radius:10px;display:block;" onerror="this.parentElement.style.display='none'">
+      </div>
+
+      <!-- Main card -->
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px;">
+        <img id="zoomImgMain" src="" style="height:72vh;max-width:min(340px,48vw);object-fit:contain;border-radius:14px;transition:opacity 0.18s,box-shadow 0.25s;box-shadow:0 0 80px rgba(255,255,255,0.12);" onerror="this.style.opacity='0.3'">
+      </div>
+
+      <!-- Side card (next) -->
+      <div id="zoomSideNext" style="flex-shrink:0;opacity:0.45;transform:scale(0.72) translateX(-20px);transform-origin:left center;transition:all 0.25s;cursor:pointer;" onclick="zoomNav(1)">
+        <img id="zoomImgNext" src="" style="height:52vh;max-width:160px;object-fit:contain;border-radius:10px;display:block;" onerror="this.parentElement.style.display='none'">
+      </div>
+
+      <!-- Next button -->
+      <button id="zoomNextBtn" onclick="zoomNav(1)" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);color:#e5e7eb;font-size:1.4rem;width:48px;height:48px;border-radius:50%;cursor:pointer;flex-shrink:0;transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">▶</button>
+    </div>
+
+    <!-- Thumbnail strip -->
+    <div id="zoomStrip" style="position:absolute;bottom:40px;left:0;right:0;display:flex;justify-content:center;gap:5px;overflow-x:auto;padding:6px 40px;scrollbar-width:none;"></div>
+
+    <!-- Bottom hint -->
+    <div style="position:absolute;bottom:12px;color:#374151;font-size:0.72rem;">← → เลื่อนการ์ด &nbsp;|&nbsp; ESC หรือคลิ๊กพื้นหลังเพื่อปิด</div>
+  </div>
+
+  <div id="deckModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:999;overflow-y:auto;padding:20px;" onclick="if(event.target===this)closeDeckModal()">
+    <div style="max-width:600px;margin:30px auto;background:var(--card-bg);border-radius:16px;border:2px solid var(--card-border);padding:24px;">
+      <div id="deckModalContent"></div>
+      <button onclick="closeDeckModal()" style="margin-top:20px;padding:10px 24px;background:var(--primary);color:white;border:none;border-radius:8px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:1rem;">✕ ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- SALES TAB -->
+<div id="tab-sales" class="tab-panel">
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon">📦</div>
+      <div class="stat-value">240+</div>
+      <div class="stat-label">รายการสินค้าทั่วไป</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔨</div>
+      <div class="stat-value">32</div>
+      <div class="stat-label">รายการประมูล</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-value">เมก้าเก็คโคกะex</div>
+      <div class="stat-label">การ์ดขายดีสุด</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📅</div>
+      <div class="stat-value">มิ.ย. 2026</div>
+      <div class="stat-label">ข้อมูล ณ เดือน</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="section-title">🔥 การ์ดขายดีที่สุด (ยอดขาย/เดือน)</div>
+      <canvas id="salesChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title">💰 ราคาเฉลี่ยตามประเภท Rarity</div>
+      <canvas id="rarityPriceChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title">📈 แนวโน้มราคา เมก้าดาร์กไรex MUR vs เก็คโคกะex SAR (6 เดือน)</div>
+      <canvas id="trendChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="section-title">🎯 สัดส่วนยอดขายตามประเภท</div>
+      <canvas id="typeChart"></canvas>
+    </div>
+  </div>
+
+  <div class="section-title">🥇 อันดับการ์ดขายดี</div>
+  <div class="top-sellers-list" id="topSellersList"></div>
+</div>
+
+<!-- GUIDE TAB -->
+<div id="tab-guide" class="tab-panel">
+
+  <!-- Header -->
+  <div style="text-align:center;margin-bottom:28px;">
+    <h2 style="color:var(--secondary);font-size:1.5rem;margin-bottom:6px;">📖 วิธีเล่น Pokémon TCG</h2>
+    <p style="color:var(--muted);font-size:0.86rem;">ทำความเข้าใจเกมผ่าน Flowchart — คลิ๊กอ่านได้เลย!</p>
+  </div>
+
+  <!-- 3-column flowchart grid -->
+  <div style="display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:20px;align-items:start;margin-bottom:24px;">
+
+    <!-- ── COL 1: GAME SETUP ── -->
+    <div>
+      <div style="text-align:center;font-size:0.72rem;font-weight:700;color:#2dd4bf;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;">🎮 ตั้งเกม</div>
+
+      <div style="background:linear-gradient(135deg,#0a2e2b,#0f4f48);border:2px solid #2dd4bf;border-radius:999px;padding:9px 16px;text-align:center;font-size:0.82rem;font-weight:700;color:#2dd4bf;">▶ เริ่มเกม</div>
+      <div style="text-align:center;color:#444;font-size:1.4rem;line-height:1.5;">↓</div>
+
+      <div style="background:#0d1117;border:1.5px solid #2dd4bf33;border-radius:10px;padding:11px;text-align:center;">
+        <div style="font-size:1.2rem;margin-bottom:4px;">🎲</div>
+        <div style="font-size:0.8rem;font-weight:700;color:#e5e7eb;">สุ่มผู้เริ่มก่อน</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:3px;">เหรียญ / ลูกเต๋า</div>
+      </div>
+      <div style="text-align:center;color:#444;font-size:1.4rem;line-height:1.5;">↓</div>
+
+      <div style="background:#0d1117;border:1.5px solid #2dd4bf33;border-radius:10px;padding:11px;text-align:center;">
+        <div style="font-size:1.2rem;margin-bottom:4px;">📤</div>
+        <div style="font-size:0.8rem;font-weight:700;color:#e5e7eb;">แจกไพ่ 7 ใบ</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:3px;">วาง Prize Card 6 ใบ (หงาย)</div>
+      </div>
+      <div style="text-align:center;color:#444;font-size:1.4rem;line-height:1.5;">↓</div>
+
+      <div style="background:#0d1117;border:1.5px solid #2dd4bf33;border-radius:10px;padding:11px;text-align:center;">
+        <div style="font-size:1.2rem;margin-bottom:4px;">🐾</div>
+        <div style="font-size:0.8rem;font-weight:700;color:#e5e7eb;">วาง Active Pokémon</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:3px;">Basic เท่านั้น | วาง Bench ≤5</div>
+      </div>
+      <div style="text-align:center;color:#444;font-size:1.4rem;line-height:1.5;">↓</div>
+
+      <div style="background:linear-gradient(135deg,#0a2810,#14532d);border:2px solid #4ade80;border-radius:999px;padding:9px 16px;text-align:center;font-size:0.82rem;font-weight:700;color:#4ade80;">✅ พร้อมเริ่มเกม!</div>
+
+      <!-- Tips box -->
+      <div style="margin-top:18px;background:linear-gradient(135deg,#1a0a30,#2a1040);border:1.5px solid #a855f7;border-radius:10px;padding:12px;">
+        <div style="font-size:0.72rem;font-weight:700;color:#c084fc;margin-bottom:8px;">💡 เทคนิคมือใหม่</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="font-size:0.7rem;color:#d1d5db;display:flex;gap:6px;align-items:flex-start;"><span>🔹</span><span>เน้น<strong style="color:#c084fc;">ธีมเดียว</strong> ไม่ผสมหลายธาตุ</span></div>
+          <div style="font-size:0.7rem;color:#d1d5db;display:flex;gap:6px;align-items:flex-start;"><span>🔹</span><span>ใส่ Trainer ≥<strong style="color:#c084fc;">20 ใบ</strong></span></div>
+          <div style="font-size:0.7rem;color:#d1d5db;display:flex;gap:6px;align-items:flex-start;"><span>🔹</span><span>วาง Basic Pokémon ≥<strong style="color:#c084fc;">12 ใบ</strong></span></div>
+          <div style="font-size:0.7rem;color:#d1d5db;display:flex;gap:6px;align-items:flex-start;"><span>🔹</span><span>จำ Prize Cards เสมอ!</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COL 2: TURN LOOP ── -->
+    <div>
+      <div style="text-align:center;font-size:0.72rem;font-weight:700;color:#fbbf24;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;">🔄 การเล่นแต่ละเทิร์น</div>
+
+      <div style="background:linear-gradient(135deg,#1c1400,#2d2000);border:2px solid #fbbf24;border-radius:999px;padding:9px 16px;text-align:center;font-size:0.82rem;font-weight:700;color:#fbbf24;">🔄 ต้นเทิร์น</div>
+      <div style="text-align:center;color:#444;font-size:1.4rem;line-height:1.5;">↓</div>
+
+      <!-- DRAW -->
+      <div style="background:#0d1117;border:1.5px solid #fbbf2444;border-radius:10px;padding:11px;text-align:center;">
+        <div style="font-size:1.2rem;margin-bottom:4px;">📥</div>
+        <div style="font-size:0.82rem;font-weight:700;color:#fbbf24;">จั่วไพ่ 1 ใบ</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:3px;">จากเด็คของตัวเอง</div>
+      </div>
+      <div style="text-align:center;color:#444;font-size:1.4rem;line-height:1.5;">↓</div>
+
+      <!-- MAIN PHASE -->
+      <div style="background:linear-gradient(135deg,#111827,#1e3a5f);border:2px solid #3b82f6;border-radius:12px;padding:14px;">
+        <div style="text-align:center;font-size:0.82rem;font-weight:700;color:#60a5fa;margin-bottom:10px;">📦 เฟสหลัก (Main Phase)</div>
+        <div style="font-size:0.68rem;color:#9ca3af;text-align:center;margin-bottom:8px;">ทำได้หลายอย่าง — ไม่จำกัดลำดับ</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="background:#0d1117;border-radius:7px;padding:8px;text-align:center;">
+            <div style="font-size:1rem;margin-bottom:3px;">🐾</div>
+            <div style="font-size:0.7rem;color:#93c5fd;font-weight:600;">วางโปเกมอน</div>
+            <div style="font-size:0.65rem;color:var(--muted);">บน Bench (≤5)</div>
+          </div>
+          <div style="background:#0d1117;border-radius:7px;padding:8px;text-align:center;">
+            <div style="font-size:1rem;margin-bottom:3px;">⚡</div>
+            <div style="font-size:0.7rem;color:#93c5fd;font-weight:600;">วาง Energy</div>
+            <div style="font-size:0.65rem;color:var(--muted);">1 ใบ/เทิร์น เท่านั้น</div>
+          </div>
+          <div style="background:#0d1117;border-radius:7px;padding:8px;text-align:center;">
+            <div style="font-size:1rem;margin-bottom:3px;">🎴</div>
+            <div style="font-size:0.7rem;color:#93c5fd;font-weight:600;">เล่น Trainer</div>
+            <div style="font-size:0.65rem;color:var(--muted);">Item: หลายใบ | Supporter: 1 ใบ</div>
+          </div>
+          <div style="background:#0d1117;border-radius:7px;padding:8px;text-align:center;">
+            <div style="font-size:1rem;margin-bottom:3px;">🌀</div>
+            <div style="font-size:0.7rem;color:#93c5fd;font-weight:600;">วิวัฒนาการ</div>
+            <div style="font-size:0.65rem;color:var(--muted);">Stage 1 / Stage 2</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;color:#444;font-size:1.4rem;line-height:1.5;">↓</div>
+
+      <!-- ATTACK -->
+      <div style="background:#0d1117;border:2px solid #ef4444;border-radius:10px;padding:11px;text-align:center;">
+        <div style="font-size:1.2rem;margin-bottom:4px;">⚔️</div>
+        <div style="font-size:0.82rem;font-weight:700;color:#ef4444;">โจมตี (Attack)</div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:3px;">ได้ 1 ท่า → <strong style="color:#f87171;">เทิร์นจบอัตโนมัติ</strong></div>
+      </div>
+      <div style="text-align:center;color:#444;font-size:1.4rem;line-height:1.5;">↓</div>
+
+      <!-- DECISION: KO? -->
+      <div style="background:linear-gradient(135deg,#1c0a00,#2d1500);border:2px solid #f97316;border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:0.72rem;color:#9ca3af;font-weight:600;letter-spacing:1px;margin-bottom:6px;">◆ DECISION</div>
+        <div style="font-size:1rem;margin-bottom:4px;">💀</div>
+        <div style="font-size:0.82rem;font-weight:700;color:#fb923c;">โปเกมอนอีกฝ่าย KO?</div>
+        <div style="display:flex;justify-content:space-around;margin-top:10px;">
+          <div style="font-size:0.72rem;font-weight:700;color:#4ade80;padding:3px 10px;background:#0a2010;border-radius:999px;border:1px solid #4ade80;">✅ ใช่</div>
+          <div style="font-size:0.72rem;font-weight:700;color:#f87171;padding:3px 10px;background:#2a0a0a;border-radius:999px;border:1px solid #f87171;">❌ ไม่</div>
+        </div>
+      </div>
+
+      <!-- Branch outcomes -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
+        <!-- YES branch -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="color:#4ade80;font-size:1.2rem;">↙</div>
+          <div style="background:#0d1117;border:1.5px solid #4ade8044;border-radius:8px;padding:8px;text-align:center;width:100%;">
+            <div style="font-size:0.85rem;margin-bottom:2px;">🏅</div>
+            <div style="font-size:0.72rem;font-weight:700;color:#4ade80;">รับ Prize Card</div>
+            <div style="font-size:0.65rem;color:var(--muted);">+1 ใบ</div>
+          </div>
+          <div style="color:#4ade80;font-size:1.2rem;">↓</div>
+          <div style="background:linear-gradient(135deg,#0a2810,#1a5c2a);border:2px solid #4ade80;border-radius:8px;padding:8px;text-align:center;width:100%;">
+            <div style="font-size:0.72rem;font-weight:700;color:#4ade80;">ครบ 6 ใบ?</div>
+            <div style="font-size:1rem;margin-top:2px;">🏆</div>
+            <div style="font-size:0.7rem;color:#86efac;font-weight:700;">ชนะ!</div>
+          </div>
+          <div style="color:#6b7280;font-size:0.65rem;text-align:center;">ยังไม่ครบ →<br>เทิร์นคู่ต่อสู้</div>
+        </div>
+        <!-- NO branch -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="color:#f87171;font-size:1.2rem;">↘</div>
+          <div style="background:#0d1117;border:1.5px solid #f8717144;border-radius:8px;padding:8px;text-align:center;width:100%;">
+            <div style="font-size:0.85rem;margin-bottom:2px;">🔁</div>
+            <div style="font-size:0.72rem;font-weight:700;color:#f87171;">สลับเทิร์น</div>
+            <div style="font-size:0.65rem;color:var(--muted);">คู่ต่อสู้ Draw</div>
+          </div>
+          <div style="color:#f87171;font-size:1.2rem;">↓</div>
+          <div style="background:#1a0a0a;border:1.5px solid #f8717144;border-radius:8px;padding:8px;text-align:center;width:100%;">
+            <div style="font-size:0.72rem;color:#f87171;font-weight:600;">↺ วนซ้ำ</div>
+            <div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">เทิร์นใหม่</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COL 3: WIN CONDITIONS + CARD TYPES ── -->
+    <div>
+      <div style="text-align:center;font-size:0.72rem;font-weight:700;color:#4ade80;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;">🏆 ชนะได้ 3 วิธี</div>
+
+      <div style="background:linear-gradient(135deg,#061a08,#0d3512);border:2px solid #4ade80;border-radius:12px;padding:12px;margin-bottom:18px;display:flex;flex-direction:column;gap:8px;">
+        <div style="background:#0d1117;border-radius:9px;padding:10px;text-align:center;">
+          <div style="font-size:1.3rem;margin-bottom:4px;">🏅</div>
+          <div style="font-size:0.8rem;font-weight:700;color:#fbbf24;">Prize Card ครบ 6 ใบ</div>
+          <div style="font-size:0.68rem;color:var(--muted);margin-top:3px;">KO โปเกมอนอีกฝ่าย = รับ Prize<br>(ex/V = รับ 2 ใบ)</div>
+        </div>
+        <div style="background:#0d1117;border-radius:9px;padding:10px;text-align:center;">
+          <div style="font-size:1.3rem;margin-bottom:4px;">💨</div>
+          <div style="font-size:0.8rem;font-weight:700;color:#60a5fa;">Bench อีกฝ่ายหมด</div>
+          <div style="font-size:0.68rem;color:var(--muted);margin-top:3px;">ไม่มีโปเกมอนเข้าแทน Active</div>
+        </div>
+        <div style="background:#0d1117;border-radius:9px;padding:10px;text-align:center;">
+          <div style="font-size:1.3rem;margin-bottom:4px;">📚</div>
+          <div style="font-size:0.8rem;font-weight:700;color:#c084fc;">เด็คอีกฝ่ายหมด</div>
+          <div style="font-size:0.68rem;color:var(--muted);margin-top:3px;">Draw ไม่ได้ต้นเทิร์น = แพ้</div>
+        </div>
+      </div>
+
+      <!-- Card Types Reference -->
+      <div style="text-align:center;font-size:0.72rem;font-weight:700;color:#c084fc;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;">🎴 ประเภทการ์ด</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="background:#0d1117;border:1.5px solid #60a5fa33;border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:9px;">
+          <span style="font-size:1.1rem;">🐾</span>
+          <div>
+            <div style="font-size:0.78rem;font-weight:700;color:#60a5fa;">Pokémon</div>
+            <div style="font-size:0.67rem;color:var(--muted);">Basic / Stage1 / Stage2 / EX / ex / V</div>
+          </div>
+        </div>
+        <div style="background:#0d1117;border:1.5px solid #fbbf2433;border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:9px;">
+          <span style="font-size:1.1rem;">🎴</span>
+          <div>
+            <div style="font-size:0.78rem;font-weight:700;color:#fbbf24;">Trainer</div>
+            <div style="font-size:0.67rem;color:var(--muted);">Item (หลายใบ) | Supporter (1/เทิร์น) | Stadium | Tool</div>
+          </div>
+        </div>
+        <div style="background:#0d1117;border:1.5px solid #4ade8033;border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:9px;">
+          <span style="font-size:1.1rem;">⚡</span>
+          <div>
+            <div style="font-size:0.78rem;font-weight:700;color:#4ade80;">Energy</div>
+            <div style="font-size:0.67rem;color:var(--muted);">วางได้ 1 ใบ/เทิร์น | 🔥💧⚡🌿🔮🥊🌑⚙️🐉◯</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weakness/Resistance -->
+      <div style="margin-top:14px;background:linear-gradient(135deg,#1a0a30,#2d1b4e);border:1.5px solid #7c3aed;border-radius:10px;padding:12px;">
+        <div style="text-align:center;font-size:0.78rem;font-weight:700;color:#c084fc;margin-bottom:10px;">⚡ Weakness & Resistance</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="background:#0d1117;border-radius:7px;padding:8px;text-align:center;">
+            <div style="font-size:1.1rem;margin-bottom:3px;">💥</div>
+            <div style="font-size:0.72rem;font-weight:700;color:#ef4444;">Weakness ×2</div>
+            <div style="font-size:0.63rem;color:var(--muted);margin-top:2px;">รับดาเมจ 2 เท่า</div>
+          </div>
+          <div style="background:#0d1117;border-radius:7px;padding:8px;text-align:center;">
+            <div style="font-size:1.1rem;margin-bottom:3px;">🛡️</div>
+            <div style="font-size:0.72rem;font-weight:700;color:#60a5fa;">Resistance −30</div>
+            <div style="font-size:0.63rem;color:var(--muted);margin-top:2px;">ลดดาเมจ −30</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div style="background:linear-gradient(135deg,#0f3460,#16213e);border:2px solid var(--secondary);border-radius:16px;padding:22px;text-align:center;">
+    <div style="font-size:1.8rem;margin-bottom:8px;">🎮</div>
+    <h3 style="color:var(--secondary);font-size:1.1rem;margin-bottom:6px;">ฝึกเล่นฟรีออนไลน์!</h3>
+    <p style="color:#c5c5c5;font-size:0.86rem;">ดาวน์โหลด <strong style="color:var(--secondary)">Pokémon TCG Live</strong> ฟรีบน PC / Mobile — เล่นกับผู้เล่นจากทั่วโลก ฝึกกลยุทธ์ก่อนซื้อการ์ดจริง</p>
+  </div>
+
+</div>
+</div>
+
+<!-- ===================== COLLECTION TAB ===================== -->
+<div id="tab-collection" class="tab-panel">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+    <div>
+      <h2 style="color:var(--secondary);font-size:1.4rem;margin-bottom:4px;">📦 คอลเล็กชันของฉัน</h2>
+      <p style="color:var(--muted);font-size:0.82rem;">บันทึกการ์ดที่มี · ติดตามมูลค่า · คำนวณกำไร/ขาดทุน</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button onclick="exportCollectionCSV()" style="padding:8px 16px;background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.4);color:#2ecc71;border-radius:8px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:0.85rem;">📥 Export CSV</button>
+      <button onclick="clearCollection()" style="padding:8px 16px;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;border-radius:8px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:0.85rem;">🗑️ ล้างทั้งหมด</button>
+    </div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-row" style="margin-bottom:20px;" id="collStats">
+    <div class="stat-card"><div class="stat-icon">🃏</div><div class="stat-value" id="cStat1">0</div><div class="stat-label">การ์ดทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-icon">💎</div><div class="stat-value" id="cStat2">฿0</div><div class="stat-label">มูลค่าตลาดรวม</div></div>
+    <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-value" id="cStat3">฿0</div><div class="stat-label">ราคาทุนรวม</div></div>
+    <div class="stat-card"><div class="stat-icon" id="cStatIcon4">📈</div><div class="stat-value" id="cStat4" style="color:#2ecc71;">฿0</div><div class="stat-label">กำไร / ขาดทุน</div></div>
+  </div>
+
+  <!-- Add Card Box -->
+  <div style="background:var(--card-bg);border:1.5px solid var(--card-border);border-radius:12px;padding:18px;margin-bottom:20px;">
+    <div style="font-size:0.88rem;color:var(--secondary);font-weight:700;margin-bottom:12px;">➕ เพิ่มการ์ดในคอลเล็กชัน</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+
+      <!-- Card Name Search -->
+      <div style="flex:1;min-width:200px;position:relative;">
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px;">ชื่อการ์ด</div>
+        <input id="collAddName" type="text" placeholder="พิมพ์ชื่อการ์ด..." autocomplete="off"
+          style="width:100%;padding:9px 12px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.9rem;"
+          oninput="collSearchCards(this.value)" onkeydown="if(event.key==='Escape')closeCollDropdown()">
+        <div id="collDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a2340;border:1.5px solid var(--card-border);border-radius:0 0 8px 8px;z-index:200;max-height:200px;overflow-y:auto;"></div>
+      </div>
+
+      <!-- Qty -->
+      <div style="width:80px;">
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px;">จำนวน</div>
+        <input id="collAddQty" type="number" value="1" min="1" max="99"
+          style="width:100%;padding:9px 12px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.9rem;">
+      </div>
+
+      <!-- Condition -->
+      <div style="width:100px;">
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px;">สภาพ</div>
+        <select id="collAddCond" style="width:100%;padding:9px 10px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.85rem;">
+          <option value="NM">NM (ใหม่)</option>
+          <option value="LP">LP (เล็กน้อย)</option>
+          <option value="MP">MP (ปานกลาง)</option>
+          <option value="HP">HP (มาก)</option>
+          <option value="DM">DM (เสียหาย)</option>
+        </select>
+      </div>
+
+      <!-- Buy Price -->
+      <div style="width:130px;">
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px;">ราคาที่ซื้อมา (฿)</div>
+        <input id="collAddBuy" type="number" placeholder="0" min="0"
+          style="width:100%;padding:9px 12px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.9rem;">
+      </div>
+
+      <!-- Add Button -->
+      <button onclick="collAddCard()"
+        style="padding:9px 20px;background:var(--green);border:none;border-radius:8px;color:#fff;font-family:Sarabun,sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+        + เพิ่ม
+      </button>
+    </div>
+  </div>
+
+  <!-- Collection Table -->
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+      <thead>
+        <tr style="background:rgba(255,203,5,0.08);color:var(--secondary);">
+          <th style="padding:10px 12px;text-align:left;font-weight:700;border-bottom:1px solid var(--card-border);">การ์ด</th>
+          <th style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--card-border);">จำนวน</th>
+          <th style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--card-border);">สภาพ</th>
+          <th style="padding:10px 8px;text-align:right;border-bottom:1px solid var(--card-border);">ราคาทุน</th>
+          <th style="padding:10px 8px;text-align:right;border-bottom:1px solid var(--card-border);">ราคาตลาด</th>
+          <th style="padding:10px 8px;text-align:right;border-bottom:1px solid var(--card-border);">มูลค่ารวม</th>
+          <th style="padding:10px 8px;text-align:right;border-bottom:1px solid var(--card-border);">กำไร/ขาดทุน</th>
+          <th style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--card-border);">ขาย / ลบ</th>
+        </tr>
+      </thead>
+      <tbody id="collTableBody">
+        <tr id="collEmpty">
+          <td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">
+            ยังไม่มีการ์ดในคอลเล็กชัน<br>
+            <span style="font-size:0.78rem;">เพิ่มการ์ดด้านบนเพื่อเริ่มต้น</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===================== TRADE TAB ===================== -->
+<div id="tab-trade" class="tab-panel">
+
+  <div style="text-align:center;margin-bottom:20px;">
+    <h2 style="color:var(--secondary);font-size:1.4rem;margin-bottom:4px;">🔄 คำนวณมูลค่าการแลกเปลี่ยน</h2>
+    <p style="color:var(--muted);font-size:0.82rem;">เพิ่มการ์ดทั้งสองฝั่ง ระบบจะคำนวณว่าดีลนี้คุ้มหรือไม่</p>
+  </div>
+
+  <!-- Trade Verdict Banner -->
+  <div id="tradeVerdict" style="text-align:center;padding:16px 20px;border-radius:12px;margin-bottom:20px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);transition:all 0.3s;">
+    <div style="font-size:1.1rem;font-weight:700;color:var(--muted);">เพิ่มการ์ดเพื่อประเมินดีล</div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;">ระบบจะบอกว่าคุ้มหรือควรต่อรองเพิ่ม</div>
+  </div>
+
+  <!-- Two-column trade area -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <!-- LEFT: My Side -->
+    <div style="background:var(--card-bg);border:1.5px solid rgba(46,204,113,0.35);border-radius:12px;padding:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-weight:700;color:#2ecc71;font-size:0.95rem;">🙋 ฝั่งฉัน</div>
+        <div style="font-size:0.78rem;color:var(--muted);">รวม: <span id="tradeMyTotal" style="color:#2ecc71;font-weight:700;">฿0</span></div>
+      </div>
+      <!-- Add card input -->
+      <div style="position:relative;margin-bottom:10px;">
+        <input id="tradeMeName" type="text" placeholder="พิมพ์ชื่อการ์ดที่จะให้..." autocomplete="off"
+          style="width:100%;padding:8px 12px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.85rem;box-sizing:border-box;"
+          oninput="tradeSearch('my',this.value)" onkeydown="if(event.key==='Escape')closeTradeDropdown('my')">
+        <div id="tradeMeDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a2340;border:1.5px solid var(--card-border);border-radius:0 0 8px 8px;z-index:200;max-height:180px;overflow-y:auto;"></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <input id="tradeMeQty" type="number" value="1" min="1" placeholder="จำนวน"
+          style="width:70px;padding:7px 10px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.85rem;">
+        <input id="tradeMePrice" type="number" placeholder="ราคา ฿" min="0"
+          style="flex:1;padding:7px 10px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.85rem;">
+        <button onclick="tradeAddCard('my')"
+          style="padding:7px 14px;background:rgba(46,204,113,0.2);border:1px solid rgba(46,204,113,0.5);color:#2ecc71;border-radius:8px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:0.85rem;font-weight:700;">+</button>
+      </div>
+      <div id="tradeMyList" style="min-height:80px;"></div>
+    </div>
+
+    <!-- RIGHT: Their Side -->
+    <div style="background:var(--card-bg);border:1.5px solid rgba(52,152,219,0.35);border-radius:12px;padding:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-weight:700;color:#3498db;font-size:0.95rem;">🤝 ฝั่งคู่แลก</div>
+        <div style="font-size:0.78rem;color:var(--muted);">รวม: <span id="tradeTheirTotal" style="color:#3498db;font-weight:700;">฿0</span></div>
+      </div>
+      <!-- Add card input -->
+      <div style="position:relative;margin-bottom:10px;">
+        <input id="tradeTheirName" type="text" placeholder="พิมพ์ชื่อการ์ดที่จะรับ..." autocomplete="off"
+          style="width:100%;padding:8px 12px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.85rem;box-sizing:border-box;"
+          oninput="tradeSearch('their',this.value)" onkeydown="if(event.key==='Escape')closeTradeDropdown('their')">
+        <div id="tradeTheirDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a2340;border:1.5px solid var(--card-border);border-radius:0 0 8px 8px;z-index:200;max-height:180px;overflow-y:auto;"></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <input id="tradeTheirQty" type="number" value="1" min="1" placeholder="จำนวน"
+          style="width:70px;padding:7px 10px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.85rem;">
+        <input id="tradeTheirPrice" type="number" placeholder="ราคา ฿" min="0"
+          style="flex:1;padding:7px 10px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.85rem;">
+        <button onclick="tradeAddCard('their')"
+          style="padding:7px 14px;background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.5);color:#3498db;border-radius:8px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:0.85rem;font-weight:700;">+</button>
+      </div>
+      <div id="tradeTheirList" style="min-height:80px;"></div>
+    </div>
+  </div>
+
+  <!-- Reset + Tips -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:16px;">
+    <button onclick="resetTrade()" style="padding:8px 20px;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;border-radius:8px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:0.85rem;">🔁 รีเซ็ตทั้งหมด</button>
+    <div style="font-size:0.75rem;color:var(--muted);text-align:right;">
+      💡 ราคาจากฐานข้อมูล MA5 T · สามารถแก้ไขราคาเองได้ · ±5% ถือว่ายุติธรรม
+    </div>
+  </div>
+
+  <!-- Trade History Log -->
+  <div style="margin-top:20px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:14px;">
+    <div style="font-size:0.82rem;color:var(--secondary);font-weight:700;margin-bottom:8px;">📋 ประวัติดีล (เซสชันนี้)</div>
+    <div id="tradeHistory" style="color:var(--muted);font-size:0.78rem;">ยังไม่มีประวัติดีล — กด "บันทึกดีล" หลังจากประเมินแล้ว</div>
+    <button onclick="saveTradeHistory()" style="margin-top:10px;padding:6px 16px;background:rgba(255,203,5,0.12);border:1px solid rgba(255,203,5,0.3);color:var(--secondary);border-radius:7px;cursor:pointer;font-family:Sarabun,sans-serif;font-size:0.8rem;">💾 บันทึกดีลนี้</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2 id="modalTitle"></h2>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<footer>
+  ข้อมูลจริงจาก <a href="https://www.tcgthailand.com" style="color:var(--secondary)">TCGThailand.com</a> • เซต เงามืดคุกคาม (MA5 T) • อัพเดต มิถุนายน 2026 • ราคาอาจเปลี่ยนแปลงตามตลาด
+</footer>
+
+<script>
+// =================== DATA (จาก TCGThailand.com — เซต เงามืดคุกคาม MA5 T) ===================
+const BASE = "https://tcgv2-r2.tumwebsme.com/cdn-cgi/image/width=250,height=350,quality=75,format=auto,fit=contain/production/products/";
+const cards = [
+  { id:1,  name:"เมก้าดาร์กไรex (MUR)",   nameTh:"Mega Darkrai ex",      type:"dark",      rarity:"MUR", set:"เงามืดคุกคาม MA5 T", price:9050,  trend:"+12%", hp:350, attack1:"Dark Void 50",            attack2:"Nightmare Blast 300",   sold:198, cardNo:"238/164", img: BASE+"405151a0-f92e-412f-ab36-83b8e9011f16/MA5_T-238.png" },
+  { id:2,  name:"เมก้าดาร์กไรex (SAR)",   nameTh:"Mega Darkrai ex",      type:"dark",      rarity:"SAR", set:"เงามืดคุกคาม MA5 T", price:6050,  trend:"+8%",  hp:350, attack1:"Dark Void 50",            attack2:"Nightmare Blast 300",   sold:143, cardNo:"229/164", img: BASE+"f86e2fd3-538f-448b-998b-106fc8a19240/MA5_T-229.png" },
+  { id:3,  name:"เมก้าเก็คโคกะex (SAR)",  nameTh:"Mega Greninja ex",     type:"water",     rarity:"SAR", set:"เงามืดคุกคาม MA5 T", price:5000,  trend:"+5%",  hp:320, attack1:"Water Shuriken 30x3",    attack2:"Torrent Slash 250",     sold:167, cardNo:"225/164", img: BASE+"611c3b3b-b023-4b07-b23a-3827a4fae2df/MA5_T-225.png" },
+  { id:4,  name:"โมรุเปโกะex (SAR)",      nameTh:"Morpeko ex",           type:"electric",  rarity:"SAR", set:"เงามืดคุกคาม MA5 T", price:5000,  trend:"+3%",  hp:240, attack1:"Hunger Cycle",           attack2:"Full Belly Mode 120",   sold:112, cardNo:"230/164", img: BASE+"830f4c9f-f5ce-4d64-a88d-1d43b81e69fb/MA5_T-230.png" },
+  { id:5,  name:"เมก้าเก็คโคกะex (MUR)",  nameTh:"Mega Greninja ex",     type:"water",     rarity:"MUR", set:"เงามืดคุกคาม MA5 T", price:5000,  trend:"+15%", hp:320, attack1:"Water Shuriken 30x3",    attack2:"Torrent Slash 250",     sold:221, cardNo:"237/164", img: BASE+"d0086afa-6e47-4eb1-b9eb-b04c1fe80898/MA5_T-237.png" },
+  { id:6,  name:"เมก้าแชนเดลาex (SAR)",   nameTh:"Mega Chandelure ex",   type:"psychic",   rarity:"SAR", set:"เงามืดคุกคาม MA5 T", price:1140,  trend:"+2%",  hp:310, attack1:"Flame Burst 60",         attack2:"Infernal Chandelier 240",sold:88, cardNo:"227/164", img: BASE+"811cd124-fd4f-4172-a620-742ecd2c5f9e/MA5_T-227.png" },
+  { id:7,  name:"ความสงบของ AZ (SAR)",    nameTh:"AZ's Serenity",        type:"colorless", rarity:"SAR", set:"เงามืดคุกคาม MA5 T", price:930,   trend:"+1%",  hp:0,   attack1:"— (Supporter Card)",     attack2:"ส่งโปเกม่อนทุกตัวกลับมือ",  sold:76, cardNo:"233/164", img: BASE+"9ee76369-ea02-448a-b5c9-cb9788d21a95/MA5_T-233.png" },
+  { id:8,  name:"เมก้าโดริวซึex (SR)",    nameTh:"Mega Dragonite ex",    type:"dragon",    rarity:"SR",  set:"เงามืดคุกคาม MA5 T", price:785,   trend:"+6%",  hp:340, attack1:"Dragon Claw 100",        attack2:"Hyper Beam 320",        sold:134, cardNo:"201/164", img: BASE+"38bd9579-e8e8-4f47-a8f5-b747701bf538/MA5_T-201.png" },
+  { id:9,  name:"ความแข็งแรงของคาซุมิ (SR)",nameTh:"Kasumi's Strength",  type:"colorless", rarity:"SR",  set:"เงามืดคุกคาม MA5 T", price:745,   trend:"0%",   hp:0,   attack1:"— (Supporter Card)",     attack2:"ดรอว์การ์ด + ต่อสู้",    sold:62, cardNo:"216/164", img: BASE+"19fe6706-cbfb-4997-a6de-52fa806593a5/MA5_T-216.png" },
+  { id:10, name:"การบรรเลงของโฮมิกะ (SAR)",nameTh:"Homika's Performance",type:"colorless", rarity:"SAR", set:"เงามืดคุกคาม MA5 T", price:610,   trend:"+4%",  hp:0,   attack1:"— (Supporter Card)",     attack2:"ดรอว์การ์ด 7 ใบ",       sold:95, cardNo:"235/164", img: BASE+"d72a3dac-e028-47df-9ea9-a864ac659d4a/MA5_T-235.png" },
+  { id:11, name:"ยาโดรัน (AR)",           nameTh:"Slowbro",              type:"water",     rarity:"AR",  set:"เงามืดคุกคาม MA5 T", price:570,   trend:"+3%",  hp:130, attack1:"Headbutt 30",           attack2:"Amnesia Slam 90",       sold:54, cardNo:"175/164", img: BASE+"2213ceea-eb51-4f5f-828d-0f7d76d3c3b7/MA5_T-175.png" },
+  { id:12, name:"ใบแดงพิเศษ (SR)",        nameTh:"Special Red Card",     type:"colorless", rarity:"SR",  set:"เงามืดคุกคาม MA5 T", price:540,   trend:"-2%",  hp:0,   attack1:"— (Item Card)",         attack2:"สับเด็คของฝ่ายตรงข้าม", sold:43, cardNo:"210/164", img: BASE+"05b84d63-a933-40f7-972b-daabe1311d2d/MA5_T-210.png" },
+  { id:13, name:"เมก้าเก็คโคกะex (SR)",   nameTh:"Mega Greninja ex",     type:"water",     rarity:"SR",  set:"เงามืดคุกคาม MA5 T", price:535,   trend:"+7%",  hp:320, attack1:"Water Shuriken 30x3",   attack2:"Torrent Slash 250",     sold:149, cardNo:"193/164", img: BASE+"f96cc0a8-0af1-4722-800b-a27bdd2c9162/MA5_T-193.png" },
+  { id:14, name:"โมรุเปโกะex (SR)",       nameTh:"Morpeko ex",           type:"electric",  rarity:"SR",  set:"เงามืดคุกคาม MA5 T", price:490,   trend:"+2%",  hp:240, attack1:"Hunger Cycle",          attack2:"Full Belly Mode 120",   sold:87, cardNo:"200/164", img: BASE+"0fa4d831-c96a-483a-9327-88d69a326688/MA5_T-200.png" },
+  { id:15, name:"เมก้าแชนเดลาex (RR)",    nameTh:"Mega Chandelure ex",   type:"psychic",   rarity:"RR",  set:"เงามืดคุกคาม MA5 T", price:30,    trend:"-5%",  hp:310, attack1:"Flame Burst 60",        attack2:"Infernal Chandelier 240", sold:28, cardNo:"070/164", img: BASE+"0561f2df-bfdf-447f-b02c-9dd573a056fb/th00014030.png" },
+  { id:16, name:"เกโคกาชิระ (AR)",        nameTh:"Frogadier",            type:"water",     rarity:"AR",  set:"เงามืดคุกคาม MA5 T", price:200,   trend:"+1%",  hp:80,  attack1:"Water Gun 30",          attack2:"Acrobatics 60+",        sold:41, cardNo:"171/164", img: BASE+"d793e6d9-31b9-4c7a-913b-626f1f8c6a60/MA5_T-171.png" },
+  { id:17, name:"เคโรมัตซึ (AR)",         nameTh:"Froakie",              type:"water",     rarity:"AR",  set:"เงามืดคุกคาม MA5 T", price:200,   trend:"+1%",  hp:60,  attack1:"Bubble 10",             attack2:"Pound 20",              sold:38, cardNo:"170/164", img: BASE+"ffb32ce6-1c47-4324-9d08-29bbc2c44ce1/MA5_T-170.png" },
+  { id:18, name:"ระเบิดแรงถึงใจ (SR)",    nameTh:"Power Bomb",           type:"colorless", rarity:"SR",  set:"เงามืดคุกคาม MA5 T", price:70,    trend:"-1%",  hp:0,   attack1:"— (Item Card)",         attack2:"ดาเมจเพิ่ม",            sold:32, cardNo:"213/164", img: BASE+"35d36b54-5685-4032-97cd-3bf8815a7a61/MA5_T-213.png" },
+  { id:19, name:"มูคุ (SR)",              nameTh:"Mukku",                type:"colorless", rarity:"SR",  set:"เงามืดคุกคาม MA5 T", price:600,   trend:"+5%",  hp:0,   attack1:"— (Supporter Card)",    attack2:"ค้นหาการ์ดในเด็ค",      sold:58, cardNo:"222/164", img: BASE+"bbc86b12-a773-4615-b3a7-c030681d59b3/MA5_T-222.png" },
+  { id:20, name:"ฟ็อกสไล (AR)",           nameTh:"Floragato",            type:"grass",     rarity:"AR",  set:"เงามืดคุกคาม MA5 T", price:30,    trend:"0%",   hp:90,  attack1:"Scratch 30",            attack2:"Petal Dance 60",        sold:21, cardNo:"180/164", img: BASE+"c5f468e5-9784-45de-898e-f95876298347/MA5_T-180.png" },
+  { id:21, name:"มิรูฮอก (AR)",           nameTh:"Mienfoo",              type:"fighting",  rarity:"AR",  set:"เงามืดคุกคาม MA5 T", price:30,    trend:"0%",   hp:70,  attack1:"Pound 20",              attack2:"Quick Attack 40",       sold:19, cardNo:"186/164", img: BASE+"5ec44878-5224-4a47-8225-d351fddb3c44/MA5_T-186.png" },
+  { id:22, name:"มูคุ (SR) #2",           nameTh:"Mukku",                type:"colorless", rarity:"SR",  set:"เงามืดคุกคาม MA5 T", price:600,   trend:"+5%",  hp:0,   attack1:"— (Supporter Card)",    attack2:"ค้นหาการ์ดในเด็ค",      sold:45, cardNo:"222/164", img: BASE+"bbc86b12-a773-4615-b3a7-c030681d59b3/MA5_T-222.png" },
+  { id:23, name:"[กล่อง] เงามืดคุกคาม",   nameTh:"Box Set MA5 T",        type:"colorless", rarity:"Box", set:"เงามืดคุกคาม MA5 T", price:1750,  trend:"+3%",  hp:0,   attack1:"— (สินค้า Sealed)",     attack2:"บอกซ์ปิดผนึก MA5 T",    sold:89, cardNo:"-", img:"https://tcgv2-r2.tumwebsme.com/cdn-cgi/image/width=250,height=350,quality=75,format=auto,fit=contain/production/category_card_019ede1f-8b45-723b-a82e-051036df9fba.webp" },
+];
+
+// ราคาประมูลที่น่าสนใจ (จากเว็บ TCGThailand)
+const auctionCards = [
+  { name:"เมก้าเก็คโคกะex MUR", cardNo:"237/164", rarity:"MUR", openPrice:5000 },
+  { name:"โมรุเปโกะex SAR", cardNo:"230/164", rarity:"SAR", openPrice:5000 },
+  { name:"เมก้าเก็คโคกะex SR", cardNo:"193/164", rarity:"SR", openPrice:777 },
+  { name:"มูคุ SR", cardNo:"222/164", rarity:"SR", openPrice:600 },
+  { name:"[กล่อง] เงามืดคุกคาม", cardNo:"-", rarity:"Box", openPrice:1750 },
+  { name:"เกโคกาชิระ AR", cardNo:"171/164", rarity:"AR", openPrice:200 },
+  { name:"เคโรมัตซึ AR", cardNo:"170/164", rarity:"AR", openPrice:200 },
+  { name:"ใบแดงพิเศษ SR", cardNo:"210/164", rarity:"SR", openPrice:150 },
+  { name:"ระเบิดแรงถึงใจ SR", cardNo:"213/164", rarity:"SR", openPrice:70 },
+  { name:"ฟ็อกสไล AR", cardNo:"180/164", rarity:"AR", openPrice:30 },
+  { name:"เมก้าแชนเดลาex RR", cardNo:"070/164", rarity:"RR", openPrice:30 },
+  { name:"มิรูฮอก AR", cardNo:"186/164", rarity:"AR", openPrice:30 },
+];
+
+const topSellers = [
+  { rank:1, name:"เมก้าเก็คโคกะex MUR", set:"237/164 — เงามืดคุกคาม", sold:221, max:221 },
+  { rank:2, name:"เมก้าดาร์กไรex MUR", set:"238/164 — เงามืดคุกคาม", sold:198, max:221 },
+  { rank:3, name:"เมก้าเก็คโคกะex SAR", set:"225/164 — เงามืดคุกคาม", sold:167, max:221 },
+  { rank:4, name:"เมก้าเก็คโคกะex SR", set:"193/164 — เงามืดคุกคาม", sold:149, max:221 },
+  { rank:5, name:"เมก้าดาร์กไรex SAR", set:"229/164 — เงามืดคุกคาม", sold:143, max:221 },
+  { rank:6, name:"เมก้าโดริวซึex SR", set:"201/164 — เงามืดคุกคาม", sold:134, max:221 },
+  { rank:7, name:"โมรุเปโกะex SAR", set:"230/164 — เงามืดคุกคาม", sold:112, max:221 },
+  { rank:8, name:"[กล่อง] เงามืดคุกคาม", set:"MA5 T Sealed Box", sold:89, max:221 },
+  { rank:9, name:"เมก้าแชนเดลาex SAR", set:"227/164 — เงามืดคุกคาม", sold:88, max:221 },
+  { rank:10, name:"โมรุเปโกะex SR", set:"200/164 — เงามืดคุกคาม", sold:87, max:221 },
+];
+
+// =================== RENDER TABLE ===================
+let filteredCards = [...cards];
+
+let currentView = 'table';
+
+function switchView(v) {
+  currentView = v;
+  document.getElementById('tableView').style.display = v==='table' ? '' : 'none';
+  document.getElementById('galleryView').style.display = v==='gallery' ? 'grid' : 'none';
+  document.getElementById('btnTable').classList.toggle('active', v==='table');
+  document.getElementById('btnGallery').classList.toggle('active', v==='gallery');
+  if (v==='gallery') renderGallery(filteredCards);
+}
+
+// ---- LIVE USD PRICE SYSTEM ----
+// Maps card ID → English Pokémon name for api.pokemontcg.io price lookup
+const priceEnMap = {
+  1:'Darkrai ex', 2:'Darkrai ex', 3:'Greninja ex', 4:'Morpeko ex',
+  5:'Greninja ex', 6:'Chandelure ex', 8:'Dragonite ex',
+  11:'Slowbro', 13:'Greninja ex', 14:'Morpeko ex', 15:'Chandelure ex',
+  16:'Frogadier', 17:'Froakie', 20:'Floragato', 21:'Mienfoo'
+};
+const livePrices = {};   // id → USD market price
+let liveTs = null;
+let liveFetching = false;
+
+async function fetchLivePrices() {
+  if (liveFetching) return;
+  liveFetching = true;
+  const btn = document.getElementById('refreshPriceBtn');
+  const lbl = document.getElementById('liveTs');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังโหลด...'; }
+
+  // Unique English names to fetch
+  const names = [...new Set(Object.values(priceEnMap))];
+
+  await Promise.all(names.map(async name => {
+    try {
+      const res = await fetch(
+        `https://api.pokemontcg.io/v2/cards?q=name:"${encodeURIComponent(name)}" supertype:Pokémon&pageSize=1&orderBy=-set.releaseDate&select=id,tcgplayer`,
+        { cache: 'no-cache' }
+      );
+      const json = await res.json();
+      const p = json.data?.[0]?.tcgplayer?.prices;
+      if (!p) return;
+      // Try multiple price tiers in order of preference
+      const val = p.holofoil?.market
+        ?? p['1stEditionHolofoil']?.market
+        ?? p.unlimitedHolofoil?.market
+        ?? p.normal?.market
+        ?? p.reverseHolofoil?.market;
+      if (val != null) {
+        // Apply to all cards mapped to this name
+        Object.entries(priceEnMap).forEach(([id, n]) => {
+          if (n === name) livePrices[+id] = val;
+        });
+      }
+    } catch (_) {}
+  }));
+
+  liveTs = new Date();
+  liveFetching = false;
+  if (btn) { btn.disabled = false; btn.textContent = '🔄 ราคา USD Live'; }
+  if (lbl) lbl.textContent = `อัพเดท ${liveTs.toLocaleTimeString('th-TH')}`;
+
+  // Re-render to show prices
+  renderTable(filteredCards);
+}
+
+// Auto-refresh every 30 minutes while page is open
+setInterval(() => { if (document.getElementById('tab-prices')?.classList.contains('active')) fetchLivePrices(); }, 30 * 60 * 1000);
+
+function renderTable(data) {
+  const tbody = document.getElementById('cardTableBody');
+  const typeLabels = { fire:'🔥 ไฟ', water:'💧 น้ำ', grass:'🌿 หญ้า', electric:'⚡ ไฟฟ้า', psychic:'🔮 จิต', dragon:'🐉 มังกร', dark:'🌑 มืด', steel:'⚙️ เหล็ก', fighting:'🥊 ต่อสู้', colorless:'◯ ไม่มีสี' };
+  tbody.innerHTML = data.map((c, i) => {
+    const trendClass = c.trend.startsWith('+') ? 'trend-up' : c.trend.startsWith('-') ? 'trend-down' : 'trend-flat';
+    const trendIcon = c.trend.startsWith('+') ? '↑' : c.trend.startsWith('-') ? '↓' : '→';
+    return `<tr>
+      <td style="color:var(--muted);font-size:0.85rem">${i+1}</td>
+      <td style="display:flex;align-items:center;gap:10px;padding:10px 16px">
+        <img class="card-thumb" src="${c.img}" alt="${c.name}" onclick="showCard(${c.id})" loading="lazy">
+        <div>
+          <div style="font-weight:700">${c.name}</div>
+          <div style="font-size:0.8rem;color:var(--muted)">${c.nameTh}</div>
+        </div>
+      </td>
+      <td style="font-size:0.82rem;color:var(--muted);white-space:nowrap">${c.cardNo}</td>
+      <td><span class="type-icon type-${c.type}"></span>${typeLabels[c.type]||c.type}</td>
+      <td><span class="rarity-badge rarity-${c.rarity}">${c.rarity}</span></td>
+      <td>
+        <div class="price-tag">฿${c.price.toLocaleString()}</div>
+        ${livePrices[c.id] != null
+          ? `<div style="font-size:0.7rem;color:#60a5fa;margin-top:3px;display:flex;align-items:center;gap:4px;"><span style="background:#0f2a5e;border:1px solid #3b82f6;border-radius:4px;padding:1px 5px;font-size:0.65rem;font-weight:700;">LIVE</span>$${livePrices[c.id].toFixed(2)} USD</div>`
+          : '<div style="font-size:0.68rem;color:#444;margin-top:3px;">— USD</div>'
+        }
+      </td>
+      <td class="${trendClass}">${trendIcon} ${c.trend}</td>
+      <td>
+        <button onclick='showCard(${c.id})' style="background:var(--card-border);color:var(--secondary);border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:0.8rem;font-family:Sarabun,sans-serif;white-space:nowrap;">ดูข้อมูล</button>
+        ${marketplaceBtns(c, true)}
+      </td>
+    </tr>`;
+  }).join('');
+  if (currentView === 'gallery') renderGallery(data);
+}
+
+function renderGallery(data) {
+  const rarityColors = { MUR:'#fde68a', SAR:'#67e8f9', SR:'#c084fc', AR:'#86efac', RR:'#fbbf24', R:'#f87171', Box:'#93c5fd' };
+  document.getElementById('galleryView').innerHTML = data.map(c => `
+    <div class="gallery-card" onclick="showCard(${c.id})">
+      <img src="${c.img}" alt="${c.name}" loading="lazy">
+      <div class="gallery-card-info">
+        <div class="gallery-card-name">
+          ${c.name}
+          <span class="gallery-card-rarity"><span class="rarity-badge rarity-${c.rarity}" style="font-size:0.68rem">${c.rarity}</span></span>
+        </div>
+        <div class="gallery-card-price">฿${c.price.toLocaleString()}</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">${c.cardNo}</div>
+        <div style="display:flex;gap:4px;margin-top:6px;justify-content:center;flex-wrap:wrap;" onclick="event.stopPropagation()">
+          <a href="${mkLinks(c).tcg}" target="_blank" rel="noopener" style="background:#1a1200;border:1px solid #FFCB05;color:#FFCB05;font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:4px;text-decoration:none;">🏆</a>
+          <a href="${mkLinks(c).shopee}" target="_blank" rel="noopener" style="background:#2a0800;border:1px solid #ee4d2d;color:#ee4d2d;font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:4px;text-decoration:none;">🛒</a>
+          <a href="${mkLinks(c).lazada}" target="_blank" rel="noopener" style="background:#0e0a2a;border:1px solid #7c83ff;color:#a5abff;font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:4px;text-decoration:none;">🛍️</a>
+          <a href="${mkLinks(c).fb}" target="_blank" rel="noopener" style="background:#061220;border:1px solid #1877f2;color:#60a5fa;font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:4px;text-decoration:none;">📘</a>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAuctions() {
+  document.getElementById('auctionGrid').innerHTML = auctionCards.map(a => `
+    <div class="auction-chip">
+      <strong>${a.name}</strong>
+      <div class="chip-price">เปิด ฿${a.openPrice.toLocaleString()}</div>
+      <div class="chip-rarity">${a.cardNo} • ${a.rarity}</div>
+    </div>
+  `).join('');
+}
+
+function filterCards() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const type = document.getElementById('typeFilter').value;
+  const rarity = document.getElementById('rarityFilter').value;
+  filteredCards = cards.filter(c =>
+    (c.name.toLowerCase().includes(q) || c.nameTh.includes(q)) &&
+    (!type || c.type === type) &&
+    (!rarity || c.rarity === rarity)
+  );
+  sortCards(false);
+}
+
+function sortCards(re = true) {
+  const sort = document.getElementById('sortSelect').value;
+  const arr = re ? [...cards] : [...filteredCards];
+  if (sort === 'price_desc') arr.sort((a,b) => b.price - a.price);
+  else if (sort === 'price_asc') arr.sort((a,b) => a.price - b.price);
+  else if (sort === 'name_asc') arr.sort((a,b) => a.name.localeCompare(b.name));
+  if (re) filteredCards = arr;
+  else filteredCards = arr;
+  renderTable(filteredCards);
+}
+
+let sortDir = {};
+function sortBy(col) {
+  sortDir[col] = !sortDir[col];
+  filteredCards.sort((a,b) => {
+    if (col === 'price') return sortDir[col] ? b.price - a.price : a.price - b.price;
+    if (col === 'name') return sortDir[col] ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+    if (col === 'rarity') return sortDir[col] ? a.rarity.localeCompare(b.rarity) : b.rarity.localeCompare(a.rarity);
+    return 0;
+  });
+  renderTable(filteredCards);
+}
+
+// ---- MARKETPLACE LINKS ----
+function mkLinks(c) {
+  const th = encodeURIComponent(c.nameTh + ' Pokemon card');
+  const thTH = encodeURIComponent(c.name + ' โปเกมอนการ์ด');
+  return {
+    tcg:     `https://www.tcgthailand.com/?s=${encodeURIComponent(c.nameTh)}`,
+    shopee:  `https://shopee.co.th/search?keyword=${thTH}`,
+    lazada:  `https://www.lazada.co.th/catalog/?q=${thTH}`,
+    fb:      `https://www.facebook.com/marketplace/search/?query=${thTH}`,
+    line:    `https://line.me/R/ti/g/search`,
+  };
+}
+
+function marketplaceBtns(c, compact = false) {
+  const lk = mkLinks(c);
+  if (compact) {
+    // Tiny icon strip for table rows
+    return `
+      <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;">
+        <a href="${lk.tcg}" target="_blank" rel="noopener"
+          title="ซื้อที่ TCGThailand"
+          style="background:#1a1200;border:1px solid #FFCB05;color:#FFCB05;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:5px;text-decoration:none;white-space:nowrap;">🏆 TCG</a>
+        <a href="${lk.shopee}" target="_blank" rel="noopener"
+          title="ค้นหาที่ Shopee"
+          style="background:#2a0800;border:1px solid #ee4d2d;color:#ee4d2d;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:5px;text-decoration:none;white-space:nowrap;">🛒 Shopee</a>
+        <a href="${lk.lazada}" target="_blank" rel="noopener"
+          title="ค้นหาที่ Lazada"
+          style="background:#0e0a2a;border:1px solid #7c83ff;color:#a5abff;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:5px;text-decoration:none;white-space:nowrap;">🛍️ Lazada</a>
+        <a href="${lk.fb}" target="_blank" rel="noopener"
+          title="ค้นหาที่ Facebook Marketplace"
+          style="background:#061220;border:1px solid #1877f2;color:#60a5fa;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:5px;text-decoration:none;white-space:nowrap;">📘 FB</a>
+      </div>`;
+  }
+  // Full panel for modal
+  return `
+    <div style="margin-top:14px;background:linear-gradient(135deg,#07111e,#0c1f36);border:1.5px solid #2563eb44;border-radius:12px;padding:14px;">
+      <div style="font-size:0.82rem;font-weight:700;color:#60a5fa;margin-bottom:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;">
+        🛒 ซื้อ / ขาย การ์ดใบนี้
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <a href="${lk.tcg}" target="_blank" rel="noopener"
+          style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1000,#2a1e00);border:1.5px solid #FFCB05;border-radius:9px;padding:10px 12px;text-decoration:none;transition:filter 0.15s;" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter=''">
+          <span style="font-size:1.3rem;">🏆</span>
+          <div>
+            <div style="font-size:0.78rem;font-weight:700;color:#FFCB05;">TCGThailand</div>
+            <div style="font-size:0.65rem;color:#a0804a;">ราคาอ้างอิง ฿${c.price.toLocaleString()}</div>
+          </div>
+          <span style="margin-left:auto;font-size:0.7rem;color:#FFCB05;">→</span>
+        </a>
+        <a href="${lk.shopee}" target="_blank" rel="noopener"
+          style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#200800,#2e0d00);border:1.5px solid #ee4d2d;border-radius:9px;padding:10px 12px;text-decoration:none;transition:filter 0.15s;" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter=''">
+          <span style="font-size:1.3rem;">🛒</span>
+          <div>
+            <div style="font-size:0.78rem;font-weight:700;color:#ee4d2d;">Shopee</div>
+            <div style="font-size:0.65rem;color:#994433;">อาจถูกกว่า ~5–10%</div>
+          </div>
+          <span style="margin-left:auto;font-size:0.7rem;color:#ee4d2d;">→</span>
+        </a>
+        <a href="${lk.lazada}" target="_blank" rel="noopener"
+          style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#080a20,#100f30);border:1.5px solid #7c83ff;border-radius:9px;padding:10px 12px;text-decoration:none;transition:filter 0.15s;" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter=''">
+          <span style="font-size:1.3rem;">🛍️</span>
+          <div>
+            <div style="font-size:0.78rem;font-weight:700;color:#a5abff;">Lazada</div>
+            <div style="font-size:0.65rem;color:#6068bb;">เน้นกล่อง/ซอง</div>
+          </div>
+          <span style="margin-left:auto;font-size:0.7rem;color:#a5abff;">→</span>
+        </a>
+        <a href="${lk.fb}" target="_blank" rel="noopener"
+          style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#030f1e,#061528);border:1.5px solid #1877f2;border-radius:9px;padding:10px 12px;text-decoration:none;transition:filter 0.15s;" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter=''">
+          <span style="font-size:1.3rem;">📘</span>
+          <div>
+            <div style="font-size:0.78rem;font-weight:700;color:#60a5fa;">Facebook</div>
+            <div style="font-size:0.65rem;color:#3a6090;">ต่อรองได้ −10–15%</div>
+          </div>
+          <span style="margin-left:auto;font-size:0.7rem;color:#60a5fa;">→</span>
+        </a>
+      </div>
+      <div style="font-size:0.68rem;color:#444;text-align:center;margin-top:10px;">ลิ้งค์จะค้นหาชื่อ "${c.nameTh}" ในแต่ละแพลตฟอร์มโดยอัตโนมัติ</div>
+    </div>`;
+}
+
+// MODAL
+function showCard(id) {
+  const c = cards.find(x => x.id === id);
+  document.getElementById('modalTitle').textContent = `🃏 ${c.name}`;
+  document.getElementById('modalContent').innerHTML = `
+    <img class="modal-img" src="${c.img}" alt="${c.name}">
+    <div class="modal-row"><span>ชื่อภาษาอังกฤษ</span><span>${c.nameTh}</span></div>
+    <div class="modal-row"><span>เลขการ์ด</span><span>${c.cardNo}</span></div>
+    <div class="modal-row"><span>ประเภท</span><span>${c.type}</span></div>
+    <div class="modal-row"><span>Rarity</span><span><span class="rarity-badge rarity-${c.rarity}">${c.rarity}</span></span></div>
+    <div class="modal-row"><span>เซต</span><span>${c.set}</span></div>
+    ${c.hp ? `<div class="modal-row"><span>HP</span><span>${c.hp}</span></div>` : ''}
+    <div class="modal-row"><span>ท่าโจมตี / เอฟเฟกต์ 1</span><span style="text-align:right;max-width:55%">${c.attack1}</span></div>
+    <div class="modal-row"><span>ท่าโจมตี / เอฟเฟกต์ 2</span><span style="text-align:right;max-width:55%">${c.attack2}</span></div>
+    <div class="modal-row" style="background:rgba(255,203,5,0.08);border-radius:8px;padding:10px;margin-top:8px"><span style="font-weight:700">ราคาตลาด</span><span style="color:#fbbf24;font-weight:800;font-size:1.2rem">฿${c.price.toLocaleString()}</span></div>
+    ${livePrices[c.id] != null ? `<div class="modal-row"><span>ราคา TCGPlayer (USD)</span><span style="color:#60a5fa;font-weight:700;">$${livePrices[c.id].toFixed(2)}</span></div>` : ''}
+    <div class="modal-row"><span>เทรนด์ราคา</span><span class="${c.trend.startsWith('+')?'trend-up':c.trend.startsWith('-')?'trend-down':'trend-flat'}">${c.trend.startsWith('+')?'↑':c.trend.startsWith('-')?'↓':'→'} ${c.trend}</span></div>
+    <div class="modal-row"><span>ยอดขาย (ประมาณ)</span><span>${c.sold} ใบ</span></div>
+    ${marketplaceBtns(c)}
+    <div style="margin-top:10px;font-size:0.75rem;color:var(--muted);text-align:center">ราคาอ้างอิงจาก TCGThailand.com • เซต เงามืดคุกคาม</div>
+  `;
+  document.getElementById('cardModal').classList.add('open');
+}
+function closeModal() { document.getElementById('cardModal').classList.remove('open'); }
+document.getElementById('cardModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+
+// =================== COMPARE DATA (scraped June 2026) ===================
+const platforms = [
+  { name:'TCGThailand.com', icon:'🏆', color:'#FFCB05', type:'ตลาดการ์ดเฉพาะทาง', singles:true, boxes:true, auctions:true, note:'ราคาตลาดโปร่งใส อ้างอิงได้ มีประมูล' },
+  { name:'Shopee', icon:'🛒', color:'#ee4d2d', type:'E-commerce', singles:false, boxes:true, auctions:false, note:'เหมาะซื้อกล่อง/ซอง มีโปรโมชั่น ฿990–฿2,500' },
+  { name:'Lazada', icon:'🛍️', color:'#7c83ff', type:'E-commerce', singles:false, boxes:true, auctions:false, note:'มีกล่องบูสเตอร์ ราคาใกล้เคียง Shopee ~฿2,000' },
+  { name:'Facebook Groups', icon:'📘', color:'#1877f2', type:'Social Marketplace', singles:true, boxes:true, auctions:false, note:'ต่อรองราคาได้ ถูกกว่าตลาด ~10-15% แต่ต้องระวังของปลอม' },
+];
+
+const boxPrices = [
+  { item:'บูสเตอร์ซอง MA5 T (1 ซอง)', tcg:'~฿65', shopee:'ไม่มีแยก', lazada:'ไม่มีแยก', lowest:'฿65', note:'TCGThailand มีขาย' },
+  { item:'ชุด 2 ซอง MA5 T', tcg:'—', shopee:'฿109', lazada:'—', lowest:'฿109', note:'Shopee' },
+  { item:'ชุด Plus 10 ซอง (MA5-P)', tcg:'—', shopee:'฿990–฿1,290', lazada:'—', lowest:'฿990', note:'Shopee หลายร้าน' },
+  { item:'กล่องบูสเตอร์ 30 ซอง (MA5 T)', tcg:'฿1,750', shopee:'฿1,960–฿2,500', lazada:'฿2,000', lowest:'฿1,750', note:'TCGThailand ราคาต่ำสุด' },
+  { item:'กล่อง MA5 + SV5M รวม', tcg:'—', shopee:'฿1,690', lazada:'—', lowest:'฿1,690', note:'Shopee (หลายเซตรวมกัน)' },
+];
+
+const singleCompare = [
+  { card:'เมก้าดาร์กไรex MUR 238/164', idx:0, rarity:'MUR', tcg:9050, facebook:'7,500–8,500', note:'ตลาด secondhand ผ่าน FB/LINE เท่านั้น' },
+  { card:'เมก้าเก็คโคกะex MUR 237/164', idx:4, rarity:'MUR', tcg:5000, facebook:'4,200–4,800', note:'หายากมาก ตลาดเฉพาะทาง' },
+  { card:'เมก้าดาร์กไรex SAR 229/164', idx:1, rarity:'SAR', tcg:6050, facebook:'5,000–5,500', note:'ราคาขึ้นต่อเนื่อง' },
+  { card:'เมก้าเก็คโคกะex SAR 225/164', idx:2, rarity:'SAR', tcg:5000, facebook:'4,300–4,700', note:'ยอดนิยมสูง' },
+  { card:'โมรุเปโกะex SAR 230/164', idx:3, rarity:'SAR', tcg:5000, facebook:'4,000–4,500', note:'เทรนด์ขาขึ้น' },
+  { card:'เมก้าแชนเดลาex SAR 227/164', idx:5, rarity:'SAR', tcg:1140, facebook:'900–1,100', note:'ราคาค่อนข้างนิ่ง' },
+  { card:'ความสงบของ AZ SAR 233/164', idx:6, rarity:'SAR', tcg:930, facebook:'750–900', note:'Supporter card ยอดนิยม' },
+  { card:'เมก้าโดริวซึex SR 201/164', idx:7, rarity:'SR', tcg:785, facebook:'650–750', note:'SR ราคาเสถียร' },
+  { card:'มูคุ SR 222/164', idx:18, rarity:'SR', tcg:600, facebook:'500–580', note:'Supporter ทรงพลัง' },
+  { card:'ยาโดรัน AR 175/164', idx:10, rarity:'AR', tcg:570, facebook:'450–550', note:'AR ยอดนิยม' },
+];
+
+function renderPlatforms() {
+  document.getElementById('platformGrid').innerHTML = platforms.map(p => `
+    <div style="background:var(--card-bg);border:2px solid ${p.color}44;border-radius:12px;padding:18px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:1.6rem">${p.icon}</span>
+        <div>
+          <div style="font-weight:800;font-size:1rem;color:${p.color}">${p.name}</div>
+          <div style="font-size:0.78rem;color:var(--muted)">${p.type}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <span style="background:${p.singles?'rgba(46,204,113,0.15)':'rgba(255,255,255,0.05)'};color:${p.singles?'#2ecc71':'var(--muted)'};border:1px solid ${p.singles?'#2ecc71':'var(--card-border)'};padding:2px 8px;border-radius:20px;font-size:0.73rem">${p.singles?'✓':'✗'} การ์ดแยกใบ</span>
+        <span style="background:${p.boxes?'rgba(52,152,219,0.15)':'rgba(255,255,255,0.05)'};color:${p.boxes?'#3498db':'var(--muted)'};border:1px solid ${p.boxes?'#3498db':'var(--card-border)'};padding:2px 8px;border-radius:20px;font-size:0.73rem">${p.boxes?'✓':'✗'} กล่อง/ซอง</span>
+        <span style="background:${p.auctions?'rgba(255,203,5,0.15)':'rgba(255,255,255,0.05)'};color:${p.auctions?'var(--secondary)':'var(--muted)'};border:1px solid ${p.auctions?'var(--secondary)':'var(--card-border)'};padding:2px 8px;border-radius:20px;font-size:0.73rem">${p.auctions?'✓':'✗'} ประมูล</span>
+      </div>
+      <div style="font-size:0.82rem;color:#c5c5c5">${p.note}</div>
+    </div>
+  `).join('');
+}
+
+function renderBoxPrices() {
+  document.getElementById('boxPriceBody').innerHTML = boxPrices.map(b => `<tr>
+    <td style="font-weight:600">${b.item}</td>
+    <td style="color:${b.tcg!=='—'?'#fbbf24':'var(--muted)'};font-weight:${b.tcg!=='—'?700:400}">${b.tcg}</td>
+    <td style="color:${b.shopee!=='ไม่มีแยก'&&b.shopee!=='—'?'#ee4d2d':'var(--muted)'}">${b.shopee}</td>
+    <td style="color:${b.lazada!=='—'?'#7c83ff':'var(--muted)'}">${b.lazada}</td>
+    <td style="font-weight:800;color:#2ecc71">${b.lowest}</td>
+    <td style="font-size:0.82rem;color:var(--muted)">${b.note}</td>
+  </tr>`).join('');
+}
+
+function renderSingleCompare() {
+  document.getElementById('singleCompareGrid').innerHTML = singleCompare.map(c => {
+    const cardData = cards[c.idx];
+    const fbLow = parseInt(c.facebook.replace(/,/g,'').split('–')[0]);
+    const saving = c.tcg - fbLow;
+    return `
+    <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      <img src="${cardData.img}" alt="${c.card}" style="width:56px;height:78px;object-fit:cover;border-radius:6px;border:1px solid var(--card-border);flex-shrink:0;cursor:pointer" onclick="showCard(${cardData.id})">
+      <div style="flex:1;min-width:180px">
+        <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px">${c.card}</div>
+        <span class="rarity-badge rarity-${c.rarity}">${c.rarity}</span>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:5px">💡 ${c.note}</div>
+      </div>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <div style="text-align:center">
+          <div style="font-size:0.7rem;color:#FFCB05;margin-bottom:3px;font-weight:600">🏆 TCGThailand</div>
+          <div style="font-weight:800;color:#fbbf24;font-size:1.1rem">฿${c.tcg.toLocaleString()}</div>
+        </div>
+        <div style="text-align:center;opacity:0.5">
+          <div style="font-size:0.7rem;color:#ee4d2d;margin-bottom:3px">🛒 Shopee</div>
+          <div style="color:var(--muted);font-size:0.85rem">ไม่มี</div>
+        </div>
+        <div style="text-align:center;opacity:0.5">
+          <div style="font-size:0.7rem;color:#7c83ff;margin-bottom:3px">🛍️ Lazada</div>
+          <div style="color:var(--muted);font-size:0.85rem">ไม่มี</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:0.7rem;color:#60a5fa;margin-bottom:3px;font-weight:600">📘 Facebook</div>
+          <div style="color:#60a5fa;font-size:0.92rem;font-weight:700">฿${c.facebook}</div>
+        </div>
+        <div style="background:rgba(46,204,113,0.12);border:1px solid #2ecc71;border-radius:8px;padding:8px 14px;text-align:center">
+          <div style="font-size:0.68rem;color:#2ecc71;margin-bottom:2px">ประหยัดได้สูงสุด</div>
+          <div style="font-weight:800;color:#2ecc71;font-size:1rem">฿${saving.toLocaleString()}</div>
+          <div style="font-size:0.68rem;color:var(--muted)">(vs TCGThailand)</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===================== DECKS DATA =====================
+const decks = [
+  // ===== 🌑 ความมืด (Darkness) =====
+  {
+    id:'d1', type:'dark', tier:'S', typeLabel:'🌑 ความมืด',
+    name:'เมก้าดาร์กไรex Sniper', subname:'Mega Darkrai ex Aggro',
+    strategy:'ใช้ท่า Mortal Shuriken ของเมก้าดาร์กไรex สไนป์การ์ดม้านั่งฝ่ายตรงข้าม 60 ดาเมจต่อตัว พร้อมปิดจบด้วย Nightmare Blast 300 ดาเมจ',
+    keyCards:['เมก้าดาร์กไรex (MUR)','ดาร์กไรex','Irida','Ultra Ball'],
+    tags:['Aggressive','Sniper','T1 Deck'],
+    difficulty:'ยาก', winRate:72, budget:'฿12,000+',
+    energy:'⚫⚫',
+    decklist:{
+      pokemon:[
+        {name:'เมก้าดาร์กไรex',qty:3},{name:'ดาร์กไรex',qty:2},{name:'ดาร์กไร',qty:2},
+        {name:'Sableye ex',qty:2},{name:'Comfey',qty:2},{name:'Froslass',qty:2}
+      ],
+      trainer:[
+        {name:'Iono',qty:4},{name:'Professor Sada\'s Vitality',qty:3},{name:'Ultra Ball',qty:4},
+        {name:'Nest Ball',qty:3},{name:'Battle VIP Pass',qty:4},{name:'Lost Vacuum',qty:3},
+        {name:'Echoing Horn',qty:2},{name:'Colress\'s Experiment',qty:4},{name:'Escape Rope',qty:2},
+        {name:'Switch Cart',qty:2},{name:'Counter Catcher',qty:2},{name:'Acrobike',qty:3}
+      ],
+      energy:[{name:'Basic Darkness Energy',qty:10}]
+    }
+  },
+  {
+    id:'d2', type:'dark', tier:'A', typeLabel:'🌑 ความมืด',
+    name:'N\'s Zoroark ex Control', subname:'Hand Control / Disruption',
+    strategy:'ควบคุมมือของฝ่ายตรงข้ามด้วยความสามารถ N\'s Command และโจมตีด้วย Phantom Claw ทำดาเมจตาม Prize Cards ที่เหลือ',
+    keyCards:['N\'s Zoroark ex','N\'s Zorua','Iono','Froslass'],
+    tags:['Control','Hand Disruption','Meta Tier A'],
+    difficulty:'กลาง', winRate:58, budget:'฿4,500–6,000',
+    energy:'⚫⚫',
+    decklist:{
+      pokemon:[
+        {name:"N's Zoroark ex",qty:4},{name:"N's Zorua",qty:4},{name:'Froslass',qty:2},
+        {name:'Snorunt',qty:2},{name:'Sableye',qty:1}
+      ],
+      trainer:[
+        {name:'Iono',qty:4},{name:'N',qty:4},{name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},
+        {name:'Counter Catcher',qty:3},{name:'Escape Rope',qty:2},{name:'Lost Vacuum',qty:2},
+        {name:'Judge',qty:3},{name:'Roxanne',qty:2},{name:'Switch',qty:2},{name:'Arven',qty:3},
+        {name:'PokéStop',qty:2}
+      ],
+      energy:[{name:'Basic Darkness Energy',qty:13}]
+    }
+  },
+  {
+    id:'d3', type:'dark', tier:'A', typeLabel:'🌑 ความมืด',
+    name:'Rocket\'s Honchkrow Disruption', subname:'Item Lock / Spread Damage',
+    strategy:'ใช้ Honchkrow เพื่อล็อคไอเทมของฝ่ายตรงข้าม ร่วมกับ Murkrow แจก 30 ดาเมจหลายเป้าพร้อมกัน สร้างแรงกดดันตลอดเกม',
+    keyCards:["Rocket's Honchkrow ex",'Murkrow','Porygon2','Arezu'],
+    tags:['Item Lock','Spread','Consistent'],
+    difficulty:'กลาง', winRate:55, budget:'฿3,500–5,000',
+    energy:'⚫⚫',
+    decklist:{
+      pokemon:[
+        {name:"Rocket's Honchkrow ex",qty:3},{name:'Murkrow',qty:4},{name:'Porygon2',qty:2},
+        {name:'Porygon',qty:2},{name:"Giovanni's Machamp ex",qty:1}
+      ],
+      trainer:[
+        {name:'Arezu',qty:3},{name:'Iono',qty:3},{name:"Giovanni's Charisma",qty:2},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:'Poké Ball',qty:2},
+        {name:'Switch',qty:3},{name:'Counter Catcher',qty:2},{name:'Lost Vacuum',qty:2},
+        {name:"Rocket's Ambition",qty:2},{name:'Judge',qty:2},{name:'Arven',qty:3}
+      ],
+      energy:[{name:'Basic Darkness Energy',qty:12}]
+    }
+  },
+  {
+    id:'d4', type:'dark', tier:'A', typeLabel:'🌑 ความมืด',
+    name:"Marnie's Grimmsnarl ex Lock", subname:'Energy Lock Stall',
+    strategy:'ล็อคพลังงานฝ่ายตรงข้ามด้วย Grimmsnarl ex แล้วทำดาเมจเพิ่มตามพลังงานที่ติดอยู่ สร้างสถานการณ์ที่ฝ่ายตรงข้ามโจมตีไม่ได้',
+    keyCards:["Marnie's Grimmsnarl ex",'Impidimp','Froslass',"Marnie's Support"],
+    tags:['Energy Lock','Stall','Consistent'],
+    difficulty:'กลาง', winRate:52, budget:'฿5,000–7,000',
+    energy:'⚫⚫',
+    decklist:{
+      pokemon:[
+        {name:"Marnie's Grimmsnarl ex",qty:3},{name:"Marnie's Morgrem",qty:2},{name:"Marnie's Impidimp",qty:3},
+        {name:'Froslass',qty:2},{name:'Snorunt',qty:2}
+      ],
+      trainer:[
+        {name:"Marnie's Pride",qty:4},{name:'Iono',qty:3},{name:'Ultra Ball',qty:4},
+        {name:'Nest Ball',qty:3},{name:'Switch',qty:2},{name:'Escape Rope',qty:2},
+        {name:'Lost Vacuum',qty:2},{name:'Counter Catcher',qty:2},{name:'Judge',qty:2},
+        {name:'Roxanne',qty:2},{name:'Arven',qty:2}
+      ],
+      energy:[{name:'Basic Darkness Energy',qty:13}]
+    }
+  },
+  {
+    id:'d5', type:'dark', tier:'B', typeLabel:'🌑 ความมืด',
+    name:'Darkrai VSTAR Dark Pulse', subname:'Energy Acceleration Classic',
+    strategy:'ใช้ Darkrai V เร่งพลังงานด้วย Dark Patch แล้วโจมตีด้วย Darkrai VSTAR ท่า Dark Pulse ดาเมจ 20+ ต่อพลังงานมืดทุกใบ',
+    keyCards:['Darkrai VSTAR','Darkrai V','Dark Patch','Galarian Moltres V'],
+    tags:['Energy Accel','VSTAR','Budget Friendly'],
+    difficulty:'ง่าย', winRate:48, budget:'฿2,000–3,500',
+    energy:'⚫⚫',
+    decklist:{
+      pokemon:[
+        {name:'Darkrai VSTAR',qty:3},{name:'Darkrai V',qty:4},{name:'Galarian Moltres V',qty:1},
+        {name:'Crobat V',qty:2},{name:'Shaymin V',qty:1}
+      ],
+      trainer:[
+        {name:"Professor's Research",qty:4},{name:'Marnie',qty:3},{name:'Boss\'s Orders',qty:3},
+        {name:'Ultra Ball',qty:4},{name:'Quick Ball',qty:4},{name:'Dark Patch',qty:4},
+        {name:'Energy Search',qty:2},{name:'Switch',qty:2},{name:'Pal Pad',qty:2},
+        {name:'Path to the Peak',qty:2}
+      ],
+      energy:[{name:'Basic Darkness Energy',qty:12}]
+    }
+  },
+
+  // ===== 💧 น้ำ (Water) =====
+  {
+    id:'w1', type:'water', tier:'S', typeLabel:'💧 น้ำ',
+    name:'เมก้าเก็คโคกะex Sniper', subname:'Mega Greninja ex Water Control',
+    strategy:'Mortal Shuriken สไนป์ 60 ดาเมจ 3 เป้าพร้อมกัน จากนั้น Ninja Spinner โจมตีหนัก ควบคุม Prize race ได้เยี่ยมมาก',
+    keyCards:['เมก้าเก็คโคกะex (MUR)','เก็คโคกะex','Irida','Cheren\'s Care'],
+    tags:['Sniper','Spread','Tier S Global'],
+    difficulty:'ยาก', winRate:68, budget:'฿8,000–10,000',
+    energy:'💧💧',
+    decklist:{
+      pokemon:[
+        {name:'เมก้าเก็คโคกะex',qty:3},{name:'เก็คโคกะex',qty:2},{name:'กอเปอร์',qty:2},
+        {name:'Comfey',qty:2},{name:'Froslass',qty:2},{name:'Snorunt',qty:2}
+      ],
+      trainer:[
+        {name:'Irida',qty:3},{name:'Iono',qty:4},{name:'Colress\'s Experiment',qty:3},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:'Battle VIP Pass',qty:4},
+        {name:'Lost Vacuum',qty:2},{name:'Echoing Horn',qty:2},{name:'Escape Rope',qty:2},
+        {name:'Counter Catcher',qty:2},{name:'Switch Cart',qty:2}
+      ],
+      energy:[{name:'Basic Water Energy',qty:11}]
+    }
+  },
+  {
+    id:'w2', type:'water', tier:'S', typeLabel:'💧 น้ำ',
+    name:'Chien-Pao ex + Baxcalibur', subname:'Cryo Rush Aggro',
+    strategy:'ใช้ Baxcalibur แปะพลังงานน้ำจากมือได้ไม่จำกัดต่อเทิร์น จากนั้น Chien-Pao ex โจมตีด้วย Hail Blade 60 ดาเมจต่อพลังงาน สุดโหด',
+    keyCards:['Chien-Pao ex','Baxcalibur','Frigibax','Superior Energy Retrieval'],
+    tags:['Energy Bomb','OHKO','Tier S Global'],
+    difficulty:'กลาง', winRate:65, budget:'฿5,500–8,000',
+    energy:'💧💧',
+    decklist:{
+      pokemon:[
+        {name:'Chien-Pao ex',qty:3},{name:'Baxcalibur',qty:3},{name:'Arctibax',qty:2},
+        {name:'Frigibax',qty:4},{name:'Bibarel',qty:2},{name:'Bidoof',qty:3}
+      ],
+      trainer:[
+        {name:"Professor's Research",qty:3},{name:'Irida',qty:3},{name:'Iono',qty:3},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:2},{name:'Superior Energy Retrieval',qty:4},
+        {name:'Switch',qty:2},{name:'Escape Rope',qty:2},{name:'Arven',qty:3},{name:'Counter Catcher',qty:2}
+      ],
+      energy:[{name:'Basic Water Energy',qty:12}]
+    }
+  },
+  {
+    id:'w3', type:'water', tier:'A', typeLabel:'💧 น้ำ',
+    name:'โมรุเปโกะex Spread Control', subname:'Palkia ex Spread Damage',
+    strategy:'โมรุเปโกะex ใช้ท่า Space-Time Smash กระจายดาเมจ 60 ทั้งด้าน ร่วมกับ Inteleon ยิงสไนป์เพิ่มเติม ควบคุมเกมได้ยาวนาน',
+    keyCards:['โมรุเปโกะex','Inteleon','Origin Forme Palkia V','Melony'],
+    tags:['Spread','Control','Energy Recovery'],
+    difficulty:'กลาง', winRate:55, budget:'฿4,000–6,000',
+    energy:'💧💧',
+    decklist:{
+      pokemon:[
+        {name:'โมรุเปโกะex',qty:3},{name:'Origin Forme Palkia V',qty:2},{name:'Inteleon',qty:2},
+        {name:'Drizzile',qty:2},{name:'Sobble',qty:3},{name:'Radiant Greninja',qty:1}
+      ],
+      trainer:[
+        {name:'Melony',qty:4},{name:'Irida',qty:2},{name:'Iono',qty:3},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:'Level Ball',qty:2},
+        {name:'Quick Shooting',qty:2},{name:'Switch',qty:2},{name:'Boss\'s Orders',qty:2},
+        {name:'Energy Retrieval',qty:2},{name:'Arven',qty:2}
+      ],
+      energy:[{name:'Basic Water Energy',qty:13}]
+    }
+  },
+  {
+    id:'w4', type:'water', tier:'A', typeLabel:'💧 น้ำ',
+    name:'Slowking Seek Inspiration', subname:'Draw Control / Think Tank',
+    strategy:'Slowking ใช้ Seek Inspiration จั่วการ์ดมหาศาลทุกเทิร์น รวมกับการ์ดควบคุมทำให้มีมือเยอะ จากนั้น Slowking ex ปิดเกมด้วยดาเมจสูง',
+    keyCards:['Slowking ex','Slowking','Slowpoke','Iono'],
+    tags:['Draw Engine','Control','Consistent'],
+    difficulty:'กลาง', winRate:53, budget:'฿3,500–5,500',
+    energy:'💧💧',
+    decklist:{
+      pokemon:[
+        {name:'Slowking ex',qty:3},{name:'Slowking (Seek Inspiration)',qty:2},{name:'Slowpoke',qty:4},
+        {name:'Jirachi ex',qty:1},{name:'Ditto',qty:1}
+      ],
+      trainer:[
+        {name:'Iono',qty:4},{name:'Professor\'s Research',qty:3},{name:'Arven',qty:3},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:'Rare Candy',qty:2},
+        {name:'Switch',qty:2},{name:'Escape Rope',qty:2},{name:'Counter Catcher',qty:2},
+        {name:'Energy Retrieval',qty:2}
+      ],
+      energy:[{name:'Basic Water Energy',qty:11},{name:'Double Turbo Energy',qty:2}]
+    }
+  },
+  {
+    id:'w5', type:'water', tier:'B', typeLabel:'💧 น้ำ',
+    name:'Kyogre ex Power Wave', subname:'Big Basic OHKO',
+    strategy:'Kyogre ex โจมตีด้วย Origin Pulse ดาเมจสูงด้วยพลังงานน้ำ 5 ใบ ใช้ Melony เร่งพลังงาน ตีโน่วันฮิตคิลได้ง่าย',
+    keyCards:['Kyogre ex','Melony','Irida','Capacious Bucket'],
+    tags:['Big Basic','OHKO','Easy to Learn'],
+    difficulty:'ง่าย', winRate:47, budget:'฿2,000–3,000',
+    energy:'💧💧',
+    decklist:{
+      pokemon:[
+        {name:'Kyogre ex',qty:4},{name:'Radiant Greninja',qty:1},{name:'Ditto',qty:1}
+      ],
+      trainer:[
+        {name:'Melony',qty:4},{name:'Irida',qty:4},{name:'Professor\'s Research',qty:3},
+        {name:'Iono',qty:3},{name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:2},
+        {name:'Capacious Bucket',qty:4},{name:'Switch',qty:3},{name:'Boss\'s Orders',qty:2},
+        {name:'Energy Retrieval',qty:3},{name:'Super Rod',qty:1}
+      ],
+      energy:[{name:'Basic Water Energy',qty:13}]
+    }
+  },
+
+  // ===== ⚡ ไฟฟ้า (Electric) =====
+  {
+    id:'e1', type:'electric', tier:'A', typeLabel:'⚡ ไฟฟ้า',
+    name:'Raging Bolt ex Thunder', subname:'Hasty Energy Dump',
+    strategy:'ทิ้งพลังงานไฟฟ้าลงสนามทั้งหมดแล้วโจมตีด้วย Raging Bolt ex ท่า Bellowing Thunder ดาเมจ 80 × พลังงาน ตีได้หนักมาก',
+    keyCards:['Raging Bolt ex','Teal Mask Ogerpon ex','Counter Gain','Ethan\'s Scroll'],
+    tags:['Energy Dump','OHKO','Tier A Global'],
+    difficulty:'กลาง', winRate:60, budget:'฿6,000–9,000',
+    energy:'⚡⚡',
+    decklist:{
+      pokemon:[
+        {name:'Raging Bolt ex',qty:3},{name:'Teal Mask Ogerpon ex',qty:2},{name:'Comfey',qty:2},
+        {name:'Jirachi ex',qty:1},{name:'Electrode ex',qty:1}
+      ],
+      trainer:[
+        {name:"Ethan's Scroll",qty:3},{name:'Iono',qty:4},{name:'Counter Gain',qty:2},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:2},{name:'Battle VIP Pass',qty:4},
+        {name:'Lost Vacuum',qty:3},{name:'Colress\'s Experiment',qty:3},{name:'Switch',qty:2},
+        {name:'Escape Rope',qty:2},{name:'Counter Catcher',qty:2}
+      ],
+      energy:[{name:'Basic Lightning Energy',qty:9}]
+    }
+  },
+  {
+    id:'e2', type:'electric', tier:'A', typeLabel:'⚡ ไฟฟ้า',
+    name:'Miraidon ex + Future Box', subname:'Energy Acceleration Rush',
+    strategy:'Miraidon ex เร่งพลังงานไฟฟ้าลงโปเกมอน Future ทุกตัวด้วย Tandem Unit ทำให้โจมตีได้เทิร์น 1 พร้อมกับ Iron Hands ex ท่า Amp You Very Much',
+    keyCards:['Miraidon ex','Iron Hands ex','Iron Jugulis ex','Penny'],
+    tags:['Turn 1 Attack','Future Deck','Consistent'],
+    difficulty:'ง่าย', winRate:57, budget:'฿4,500–7,000',
+    energy:'⚡⚡',
+    decklist:{
+      pokemon:[
+        {name:'Miraidon ex',qty:4},{name:'Iron Hands ex',qty:3},{name:'Iron Jugulis ex',qty:2},
+        {name:'Iron Treads ex',qty:1},{name:'Raichu V',qty:1}
+      ],
+      trainer:[
+        {name:"Professor's Research",qty:3},{name:'Iono',qty:3},{name:'Penny',qty:2},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:'Electric Generator',qty:4},
+        {name:'Switch',qty:2},{name:'Boss\'s Orders',qty:2},{name:'Arven',qty:3},
+        {name:'Lost City',qty:1}
+      ],
+      energy:[{name:'Basic Lightning Energy',qty:13}]
+    }
+  },
+  {
+    id:'e3', type:'electric', tier:'A', typeLabel:'⚡ ไฟฟ้า',
+    name:'Mega Manectric ex Speed', subname:'Energy Drop Rush',
+    strategy:'Mega Manectric ex ทิ้งพลังงานไฟฟ้าลงโปเกมอนข้างเคียงด้วย Energy Crush ทำให้เพื่อนพร้อมโจมตีพร้อมกัน รุกได้ต่อเนื่อง',
+    keyCards:['เมก้าเมนเนคทริคex','Manectric','Electric Generator','Professor Sada'],
+    tags:['Energy Drop','Rush','Mid Game'],
+    difficulty:'กลาง', winRate:54, budget:'฿4,000–6,000',
+    energy:'⚡⚡',
+    decklist:{
+      pokemon:[
+        {name:'เมก้าเมนเนคทริคex',qty:3},{name:'Manectric',qty:2},{name:'Electrike',qty:3},
+        {name:'Raichu V',qty:1},{name:'Jirachi ex',qty:1}
+      ],
+      trainer:[
+        {name:'Professor Sada\'s Vitality',qty:3},{name:'Iono',qty:4},{name:'Arven',qty:3},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:'Electric Generator',qty:4},
+        {name:'Switch',qty:2},{name:'Boss\'s Orders',qty:2},{name:'Energy Retrieval',qty:2}
+      ],
+      energy:[{name:'Basic Lightning Energy',qty:12}]
+    }
+  },
+  {
+    id:'e4', type:'electric', tier:'B', typeLabel:'⚡ ไฟฟ้า',
+    name:'Regieleki VMAX Volt Storm', subname:'Speed Single Prize',
+    strategy:'Regieleki VMAX โจมตีด้วย Volt Storm ดาเมจ 220 แค่ 2 พลังงาน เป็น Single Prize Pokémon ทำให้ฝ่ายตรงข้ามต้องโจมตี 6 ครั้ง ขณะที่เราตี 3 ครั้งชนะ',
+    keyCards:['Regieleki VMAX','Regieleki V','Flaaffy','Exp. Share'],
+    tags:['Single Prize','Fast Setup','Tricky'],
+    difficulty:'กลาง', winRate:50, budget:'฿2,500–4,000',
+    energy:'⚡⚡',
+    decklist:{
+      pokemon:[
+        {name:'Regieleki VMAX',qty:3},{name:'Regieleki V',qty:3},{name:'Flaaffy',qty:3},
+        {name:'Mareep',qty:4},{name:'Raichu V',qty:1}
+      ],
+      trainer:[
+        {name:"Professor's Research",qty:3},{name:'Iono',qty:3},{name:'Arven',qty:2},
+        {name:'Ultra Ball',qty:4},{name:'Quick Ball',qty:4},{name:'Level Ball',qty:2},
+        {name:'Exp. Share',qty:3},{name:'Switch',qty:2},{name:'Boss\'s Orders',qty:2},
+        {name:'Path to the Peak',qty:2}
+      ],
+      energy:[{name:'Basic Lightning Energy',qty:11}]
+    }
+  },
+  {
+    id:'e5', type:'electric', tier:'C', typeLabel:'⚡ ไฟฟ้า',
+    name:'Pikachu ex Classic', subname:'Budget Starter',
+    strategy:'เด็คพื้นฐานสำหรับมือใหม่ ใช้ Pikachu ex โจมตีง่ายๆ ด้วย Thunderbolt 200 ดาเมจ ทิ้งพลังงาน 3 ใบ เป็นเด็คราคาถูกเรียนรู้ได้ง่าย',
+    keyCards:['Pikachu ex','Raichu','Boltundex V','Iono'],
+    tags:['Budget','Beginner','Fun'],
+    difficulty:'ง่ายมาก', winRate:42, budget:'฿1,200–2,000',
+    energy:'⚡⚡',
+    decklist:{
+      pokemon:[
+        {name:'Pikachu ex',qty:4},{name:'Raichu',qty:2},{name:'Pikachu',qty:3},
+        {name:'Boltundex V',qty:1},{name:'Flaaffy',qty:1},{name:'Mareep',qty:2}
+      ],
+      trainer:[
+        {name:"Professor's Research",qty:4},{name:'Iono',qty:3},{name:'Arven',qty:2},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:4},{name:'Energy Retrieval',qty:3},
+        {name:'Switch',qty:3},{name:'Boss\'s Orders',qty:2},{name:'Potion',qty:2}
+      ],
+      energy:[{name:'Basic Lightning Energy',qty:13}]
+    }
+  },
+
+  // ===== 🔥 ไฟ (Fire) =====
+  {
+    id:'f1', type:'fire', tier:'A', typeLabel:'🔥 ไฟ',
+    name:'Charizard ex Blaze', subname:'High Damage / Consistent',
+    strategy:'Charizard ex ท่า Burning Darkness ดาเมจ 180 + 30 ต่อ Prize Card ที่ฝ่ายตรงข้ามนำอยู่ ใช้ Arcanine ex เร่งพลังงานไฟ เป็นเด็คที่แข็งแกร่งที่สุดในธาตุไฟ',
+    keyCards:['Charizard ex','Arcanine ex','Charmeleon','Rare Candy'],
+    tags:['High Damage','Consistent','Prize Trade'],
+    difficulty:'กลาง', winRate:63, budget:'฿5,500–8,500',
+    energy:'🔥🔥',
+    decklist:{
+      pokemon:[
+        {name:'Charizard ex',qty:3},{name:'Charmeleon',qty:1},{name:'Charmander',qty:4},
+        {name:'Arcanine ex',qty:2},{name:'Growlithe',qty:2},{name:'Bibarel',qty:2},{name:'Bidoof',qty:3}
+      ],
+      trainer:[
+        {name:"Professor's Research",qty:3},{name:'Iono',qty:3},{name:'Arven',qty:3},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:'Rare Candy',qty:4},
+        {name:'Switch',qty:2},{name:'Boss\'s Orders',qty:2},{name:'Counter Catcher',qty:1}
+      ],
+      energy:[{name:'Basic Fire Energy',qty:13}]
+    }
+  },
+  {
+    id:'f2', type:'fire', tier:'A', typeLabel:'🔥 ไฟ',
+    name:"Ethan's Typhlosion Firestorm", subname:'Energy Acceleration Classic',
+    strategy:'Typhlosion ของ Ethan เร่งพลังงานไฟจากกองทิ้งขึ้นสนามทุกเทิร์น เพิ่มพลังงานให้ Entei V หรือ Charizard โจมตีหนักตั้งแต่เทิร์นต้น',
+    keyCards:["Ethan's Typhlosion","Ethan's Quilava","Entei V",'Fire Energy'],
+    tags:['Energy Accel','Trainer Lock','Flashy'],
+    difficulty:'กลาง', winRate:56, budget:'฿4,000–6,500',
+    energy:'🔥🔥',
+    decklist:{
+      pokemon:[
+        {name:"Ethan's Typhlosion",qty:3},{name:"Ethan's Quilava",qty:2},{name:"Ethan's Cyndaquil",qty:4},
+        {name:'Entei V',qty:3},{name:'Jirachi ex',qty:1}
+      ],
+      trainer:[
+        {name:'Ethan\'s Challenge',qty:3},{name:'Iono',qty:3},{name:'Arven',qty:3},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:'Rare Candy',qty:3},
+        {name:'Switch',qty:2},{name:'Boss\'s Orders',qty:2},{name:'Energy Retrieval',qty:2}
+      ],
+      energy:[{name:'Basic Fire Energy',qty:13}]
+    }
+  },
+  {
+    id:'f3', type:'fire', tier:'B', typeLabel:'🔥 ไฟ',
+    name:'Entei V + Blaze', subname:'Basic One-Hit Aggro',
+    strategy:'Entei V โจมตีด้วย Sacred Fire+ 220 ดาเมจ ไม่มีผลกระทบ เป็นเด็ค Big Basic ที่โจมตีแรงตั้งแต่เทิร์น 2 ราคาถูก เหมาะมือกลาง',
+    keyCards:['Entei V','Magma Basin','Arcanine','Melony'],
+    tags:['Big Basic','Simple','Budget'],
+    difficulty:'ง่าย', winRate:49, budget:'฿2,000–3,500',
+    energy:'🔥🔥',
+    decklist:{
+      pokemon:[
+        {name:'Entei V',qty:4},{name:'Arcanine ex',qty:1},{name:'Growlithe',qty:1},
+        {name:'Radiant Charizard',qty:1}
+      ],
+      trainer:[
+        {name:"Professor's Research",qty:4},{name:'Iono',qty:3},{name:'Marnie',qty:2},
+        {name:'Ultra Ball',qty:4},{name:'Quick Ball',qty:4},{name:'Magma Basin',qty:4},
+        {name:'Switch',qty:3},{name:'Boss\'s Orders',qty:3},{name:'Energy Retrieval',qty:3}
+      ],
+      energy:[{name:'Basic Fire Energy',qty:12}]
+    }
+  },
+  {
+    id:'f4', type:'fire', tier:'B', typeLabel:'🔥 ไฟ',
+    name:'Armarouge ex + Future Fire', subname:'Combo Attacker',
+    strategy:'Armarouge ex ย้ายพลังงานไฟจากโปเกมอนที่ถูกโจมตีมาให้ตัวอื่นต่อสู้ได้ต่อเนื่องโดยไม่ต้องติดพลังงานใหม่ สร้างเกมรุกต่อเนื่อง',
+    keyCards:['Armarouge ex','Iron Moth ex','Charcadet','Arven'],
+    tags:['Energy Transfer','Combo','Mid Game'],
+    difficulty:'กลาง', winRate:48, budget:'฿3,500–5,000',
+    energy:'🔥🔥',
+    decklist:{
+      pokemon:[
+        {name:'Armarouge ex',qty:3},{name:'Charcadet',qty:4},{name:'Iron Moth ex',qty:2},
+        {name:'Radiant Charizard',qty:1},{name:'Jirachi ex',qty:1}
+      ],
+      trainer:[
+        {name:'Arven',qty:4},{name:'Iono',qty:3},{name:"Professor's Research",qty:3},
+        {name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:'Level Ball',qty:2},
+        {name:'Switch',qty:2},{name:'Escape Rope',qty:2},{name:'Boss\'s Orders',qty:2},
+        {name:'Energy Retrieval',qty:3}
+      ],
+      energy:[{name:'Basic Fire Energy',qty:10}]
+    }
+  },
+  {
+    id:'f5', type:'fire', tier:'B', typeLabel:'🔥 ไฟ',
+    name:'Cinderace VMAX Fire Kick', subname:'Speed Single-Prize Punisher',
+    strategy:'Cinderace VMAX ท่า G-Max Fireball สุ่มโจมตีเป้าหมาย อีกท่า Libero Blaze ดาเมจสูงพร้อมล่าถอยได้ เล่นง่ายกว่า Charizard แต่สนุกกว่า',
+    keyCards:['Cinderace VMAX','Cinderace V','Raihan','Fire Energy'],
+    tags:['VMAX','Flexible','Raid Battle'],
+    difficulty:'ง่าย', winRate:47, budget:'฿2,500–4,000',
+    energy:'🔥🔥',
+    decklist:{
+      pokemon:[
+        {name:'Cinderace VMAX',qty:3},{name:'Cinderace V',qty:4},{name:'Radiant Charizard',qty:1},
+        {name:'Crobat V',qty:2},{name:'Dedenne GX',qty:1}
+      ],
+      trainer:[
+        {name:'Raihan',qty:4},{name:"Professor's Research",qty:3},{name:'Marnie',qty:3},
+        {name:'Ultra Ball',qty:4},{name:'Quick Ball',qty:4},{name:'Switch',qty:3},
+        {name:'Boss\'s Orders',qty:2},{name:'Energy Retrieval',qty:3},{name:'Pal Pad',qty:1}
+      ],
+      energy:[{name:'Basic Fire Energy',qty:11}]
+    }
+  },
+
+// ── DARK d6–d10 ──────────────────────────────────────────────────────────────
+  {
+    id:'d6', type:'dark', tier:'A', typeLabel:'🌑 ความมืด',
+    name:'Yveltal ex Stall', subname:'Dark Wing Disruption',
+    strategy:'Yveltal ex ท่า Darkness Blade กด HP สูง ขณะที่ Yveltal BKT ลบ Energy ฝ่ายตรงข้าม เด็คสไตล์ Stall ทำให้ฝ่ายตรงข้ามโจมตีไม่ได้ในระยะยาว',
+    keyCards:['Yveltal ex','Dark Patch','Path to the Peak','Darkness Energy'],
+    tags:['Stall','Disruption','Energy Denial'],
+    difficulty:'ปานกลาง', winRate:58, budget:'฿4,000–6,000', energy:'⚫⚫',
+    decklist:{
+      pokemon:[{name:'Yveltal ex',qty:3},{name:'Crobat V',qty:2},{name:'Radiant Greninja',qty:1},{name:'Sableye',qty:2}],
+      trainer:[{name:'Iono',qty:4},{name:"Professor's Research",qty:3},{name:"Boss's Orders",qty:3},{name:'Ultra Ball',qty:4},{name:'Dark Patch',qty:4},{name:'Escape Rope',qty:3},{name:'Pal Pad',qty:2},{name:'Path to the Peak',qty:2},{name:'Lost City',qty:1}],
+      energy:[{name:'Basic Darkness Energy',qty:13}]
+    }
+  },
+  {
+    id:'d7', type:'dark', tier:'A', typeLabel:'🌑 ความมืด',
+    name:'Weavile ex Spread', subname:'Multi-Prize Spread Control',
+    strategy:'Weavile ex ท่า Vicious Claws สเปรด 30 ทุกโปเกมอนบน Bench จับคู่กับ Sneasel ex ทำ Cycle Spread รับ Prize หลายใบในรอบเดียวกัน',
+    keyCards:['Weavile ex','Sneasel ex','Radiant Greninja','Dark Patch'],
+    tags:['Spread','Multi-Prize','Control'],
+    difficulty:'ยาก', winRate:61, budget:'฿5,000–7,500', energy:'⚫⚫',
+    decklist:{
+      pokemon:[{name:'Weavile ex',qty:3},{name:'Sneasel ex',qty:4},{name:'Radiant Greninja',qty:2},{name:'Crobat V',qty:2}],
+      trainer:[{name:'Iono',qty:3},{name:"Professor's Research",qty:3},{name:'Roxanne',qty:2},{name:'Ultra Ball',qty:4},{name:'Dark Patch',qty:4},{name:'Quick Ball',qty:3},{name:'Echoing Horn',qty:2},{name:"Boss's Orders",qty:3},{name:'Counter Catcher',qty:2}],
+      energy:[{name:'Basic Darkness Energy',qty:11}]
+    }
+  },
+  {
+    id:'d8', type:'dark', tier:'B', typeLabel:'🌑 ความมืด',
+    name:'Umbreon VMAX Endure', subname:'Dark Tanker',
+    strategy:'Umbreon VMAX HP 310 เป็นตัว Tank หลัก ท่า Max Darkness 130 + ยิง Bench 30 ทุกรอบ เน้นทนดาเมจและกด Bench ฝ่ายตรงข้ามอย่างต่อเนื่อง',
+    keyCards:['Umbreon VMAX','Umbreon V','Penny','Dark Patch'],
+    tags:['Tank','VMAX','Endurance'],
+    difficulty:'ง่าย', winRate:49, budget:'฿2,500–4,000', energy:'⚫⚫',
+    decklist:{
+      pokemon:[{name:'Umbreon VMAX',qty:3},{name:'Umbreon V',qty:4},{name:'Crobat V',qty:2},{name:'Radiant Greninja',qty:1}],
+      trainer:[{name:'Penny',qty:3},{name:"Professor's Research",qty:3},{name:'Marnie',qty:3},{name:'Level Ball',qty:4},{name:'Dark Patch',qty:3},{name:'Ultra Ball',qty:3},{name:'Switch Cart',qty:3},{name:'Escape Rope',qty:2},{name:'Pal Pad',qty:2}],
+      energy:[{name:'Basic Darkness Energy',qty:11}]
+    }
+  },
+  {
+    id:'d9', type:'dark', tier:'B', typeLabel:'🌑 ความมืด',
+    name:'Darkrai VSTAR Starbirth', subname:'Prize Control Mid-Range',
+    strategy:'Darkrai VSTAR ท่า Dark Pulse ดาเมจ +30 ต่อ Darkness Energy ใน Play VSTAR Power "Star Abyss" ดึงการ์ดจาก Prize Deck เด็คควบคุมเกมได้ดีในระยะยาว',
+    keyCards:['Darkrai VSTAR','Darkrai V','Dark Patch','Energy Search'],
+    tags:['VSTAR','Mid-Range','Prize Control'],
+    difficulty:'ปานกลาง', winRate:53, budget:'฿3,000–5,000', energy:'⚫⚫',
+    decklist:{
+      pokemon:[{name:'Darkrai VSTAR',qty:3},{name:'Darkrai V',qty:4},{name:'Crobat V',qty:2},{name:'Radiant Greninja',qty:1}],
+      trainer:[{name:'Iono',qty:3},{name:"Professor's Research",qty:3},{name:'Raihan',qty:2},{name:'Dark Patch',qty:4},{name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:"Boss's Orders",qty:2},{name:'Energy Search',qty:2},{name:'Pal Pad',qty:2}],
+      energy:[{name:'Basic Darkness Energy',qty:12}]
+    }
+  },
+  {
+    id:'d10', type:'dark', tier:'S', typeLabel:'🌑 ความมืด',
+    name:'Hisuian Zoroark VSTAR', subname:'Phantom Pain Mirror',
+    strategy:'Hisuian Zoroark VSTAR VSTAR Power "Phantom Star" ดาเมจตาม Prize ที่ฝ่ายตรงข้ามรับไปแล้ว ยิ่งเกมนาน ยิ่งแรง Lost Zone Engine ทำ Cycle ได้เองโดยไม่ต้องพึ่ง Supporter',
+    keyCards:['Hisuian Zoroark VSTAR','Comfey',"Colress's Experiment",'Lost Vacuum'],
+    tags:['Lost Zone','Phantom','Prize Scaling'],
+    difficulty:'ยาก', winRate:67, budget:'฿6,000–9,000', energy:'⚫⚫',
+    decklist:{
+      pokemon:[{name:'Hisuian Zoroark VSTAR',qty:3},{name:'Comfey',qty:4},{name:'Sableye',qty:2},{name:'Radiant Greninja',qty:1},{name:'Cramorant',qty:1}],
+      trainer:[{name:"Colress's Experiment",qty:4},{name:'Iono',qty:2},{name:'Roxanne',qty:2},{name:'Lost Vacuum',qty:4},{name:'Echoing Horn',qty:3},{name:'Ultra Ball',qty:4},{name:'Lost City',qty:2},{name:'Switch',qty:2}],
+      energy:[{name:'Basic Darkness Energy',qty:5},{name:'Basic Water Energy',qty:4}]
+    }
+  },
+
+// ── WATER w6–w10 ──────────────────────────────────────────────────────────────
+  {
+    id:'w6', type:'water', tier:'S', typeLabel:'💧 น้ำ',
+    name:'Walking Wake ex Ramp', subname:'Paradox Water Turbo',
+    strategy:'Walking Wake ex Ability "Frenzied Gouging" ดึง Energy จาก Discard แล้วโจมตีด้วย Hydro Pump ดาเมจ +30 ต่อ Energy ที่ติด จับคู่ Irida ค้นหาของได้ทุกรอบ เด็ค Tier S Meta ปัจจุบัน',
+    keyCards:['Walking Wake ex','Radiant Greninja','Irida','Capacious Bucket'],
+    tags:['Turbo','Meta','Paradox'],
+    difficulty:'ปานกลาง', winRate:70, budget:'฿7,000–10,000', energy:'💧💧',
+    decklist:{
+      pokemon:[{name:'Walking Wake ex',qty:4},{name:'Radiant Greninja',qty:2},{name:'Jirachi',qty:2},{name:'Manaphy',qty:1}],
+      trainer:[{name:'Irida',qty:4},{name:"Professor's Research",qty:3},{name:'Iono',qty:2},{name:'Capacious Bucket',qty:4},{name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:"Boss's Orders",qty:2},{name:'Switch',qty:3},{name:'Exp. Share',qty:2}],
+      energy:[{name:'Basic Water Energy',qty:13}]
+    }
+  },
+  {
+    id:'w7', type:'water', tier:'B', typeLabel:'💧 น้ำ',
+    name:'Blastoise ex Shell Armor', subname:'Stage2 Tank & Cannon',
+    strategy:'Blastoise ex HP 340 ทนมาก ท่า Hydro Pump Cannon โจมตี 220–280 ตามจำนวน Energy รวมกับ Melony ชาร์จ Energy จาก Discard ทุกรอบ เหมาะสำหรับมือใหม่สาย Stage2',
+    keyCards:['Blastoise ex','Wartortle','Squirtle','Melony'],
+    tags:['Stage2','Tank','Beginner'],
+    difficulty:'ปานกลาง', winRate:50, budget:'฿2,000–3,500', energy:'💧💧',
+    decklist:{
+      pokemon:[{name:'Blastoise ex',qty:3},{name:'Wartortle',qty:3},{name:'Squirtle',qty:4},{name:'Radiant Greninja',qty:1},{name:'Manaphy',qty:2}],
+      trainer:[{name:'Melony',qty:3},{name:"Professor's Research",qty:3},{name:'Iono',qty:3},{name:'Rare Candy',qty:4},{name:'Ultra Ball',qty:4},{name:'Level Ball',qty:3},{name:"Boss's Orders",qty:2},{name:'Capacious Bucket',qty:2},{name:'Switch',qty:2}],
+      energy:[{name:'Basic Water Energy',qty:11}]
+    }
+  },
+  {
+    id:'w8', type:'water', tier:'A', typeLabel:'💧 น้ำ',
+    name:'Gyarados ex Tempest', subname:'Destructive Wave Attack',
+    strategy:'Gyarados ex ท่า Aqua Drain 250 แถมดึง Energy ออกสร้าง Cycle ที่ยากต่อการหยุด จับคู่กับ Irida + Capacious Bucket ชาร์จ Energy ใหม่ได้เร็วสุดๆ',
+    keyCards:['Gyarados ex','Magikarp','Irida','Capacious Bucket'],
+    tags:['Stage1','Cycle','Aggressive'],
+    difficulty:'ปานกลาง', winRate:62, budget:'฿4,500–6,500', energy:'💧💧',
+    decklist:{
+      pokemon:[{name:'Gyarados ex',qty:3},{name:'Magikarp',qty:4},{name:'Radiant Greninja',qty:2},{name:'Manaphy',qty:1}],
+      trainer:[{name:'Irida',qty:4},{name:"Professor's Research",qty:3},{name:'Iono',qty:2},{name:'Capacious Bucket',qty:4},{name:'Level Ball',qty:4},{name:'Nest Ball',qty:3},{name:"Boss's Orders",qty:2},{name:'Switch',qty:2},{name:'Escape Rope',qty:2}],
+      energy:[{name:'Basic Water Energy',qty:12}]
+    }
+  },
+  {
+    id:'w9', type:'water', tier:'C', typeLabel:'💧 น้ำ',
+    name:'Empoleon V Emperor Lock', subname:'Bench Limit Stall',
+    strategy:'Empoleon V Ability "Emperor\'s Wisdom" จำกัด Bench คู่ต่อสู้ได้สูงสุด 3 ตัว รวมกับ Path to the Peak ปิด Ability เด็คนี้เน้น Lock และ Stall ให้ฝ่ายตรงข้าม Setup ไม่ได้',
+    keyCards:['Empoleon V','Path to the Peak','Iono','Roxanne'],
+    tags:['Lock','Stall','Bench Limit'],
+    difficulty:'ยาก', winRate:44, budget:'฿2,000–3,000', energy:'💧💧',
+    decklist:{
+      pokemon:[{name:'Empoleon V',qty:4},{name:'Manaphy',qty:2},{name:'Radiant Greninja',qty:1}],
+      trainer:[{name:'Iono',qty:4},{name:'Roxanne',qty:3},{name:'Judge',qty:3},{name:'Ultra Ball',qty:4},{name:'Path to the Peak',qty:4},{name:"Boss's Orders",qty:2},{name:'Switch',qty:3},{name:'Escape Rope',qty:2},{name:'Pal Pad',qty:2}],
+      energy:[{name:'Basic Water Energy',qty:9}]
+    }
+  },
+  {
+    id:'w10', type:'water', tier:'B', typeLabel:'💧 น้ำ',
+    name:'Lapras VMAX Glacial', subname:'Big Body Spread Healer',
+    strategy:'Lapras VMAX HP 320 พร้อม Max Blizzard 130 สเปรด Bench 30 ทุกรอบ Ability ลดดาเมจที่รับ สไตล์ Tank สบายๆ ช่วยกด Bench ฝ่ายตรงข้ามจนสะสม Prize ได้ครบ',
+    keyCards:['Lapras VMAX','Lapras V','Melony','Exp. Share'],
+    tags:['VMAX','Tank','Spread'],
+    difficulty:'ง่าย', winRate:47, budget:'฿2,000–3,500', energy:'💧💧',
+    decklist:{
+      pokemon:[{name:'Lapras VMAX',qty:3},{name:'Lapras V',qty:4},{name:'Manaphy',qty:2},{name:'Radiant Greninja',qty:1}],
+      trainer:[{name:'Melony',qty:4},{name:"Professor's Research",qty:3},{name:'Iono',qty:2},{name:'Ultra Ball',qty:4},{name:'Exp. Share',qty:3},{name:'Nest Ball',qty:3},{name:'Switch Cart',qty:3},{name:"Boss's Orders",qty:2},{name:'Pal Pad',qty:2}],
+      energy:[{name:'Basic Water Energy',qty:11}]
+    }
+  },
+
+// ── ELECTRIC e6–e10 ──────────────────────────────────────────────────────────
+  {
+    id:'e6', type:'electric', tier:'B', typeLabel:'⚡ ไฟฟ้า',
+    name:'Magnezone ex Control', subname:'Magnetic Zone Lock',
+    strategy:'Magnezone ex Ability "Magnetic Draw" จั่วไพ่ได้ต่อเนื่อง ท่า Giga Volt 250 ทำลาย เด็คนี้ใช้ Magnezone เป็นทั้ง Draw Engine และ Attacker พร้อมกัน',
+    keyCards:['Magnezone ex','Magneton','Magnemite','Electric Generator'],
+    tags:['Stage2','Draw Engine','Control'],
+    difficulty:'ยาก', winRate:52, budget:'฿3,500–5,500', energy:'⚡⚡',
+    decklist:{
+      pokemon:[{name:'Magnezone ex',qty:3},{name:'Magneton',qty:2},{name:'Magnemite',qty:4},{name:'Crobat V',qty:2},{name:'Radiant Greninja',qty:1}],
+      trainer:[{name:'Iono',qty:3},{name:"Professor's Research",qty:3},{name:'Penny',qty:2},{name:'Rare Candy',qty:4},{name:'Electric Generator',qty:4},{name:'Ultra Ball',qty:3},{name:'Level Ball',qty:3},{name:"Boss's Orders",qty:2},{name:'Switch',qty:2}],
+      energy:[{name:'Basic Lightning Energy',qty:11}]
+    }
+  },
+  {
+    id:'e7', type:'electric', tier:'B', typeLabel:'⚡ ไฟฟ้า',
+    name:'Pikachu VMAX Thunder', subname:'G-Max Volt Tackle',
+    strategy:'Pikachu VMAX ท่า G-Max Volt Tackle 300 แรงมากแต่ต้องทิ้ง Energy ทุก 3 ท่า จัดคู่กับ Electric Generator + Exp. Share เพื่อ Recycle Energy กลับมาต่อเนื่อง',
+    keyCards:['Pikachu VMAX','Pikachu V','Electric Generator','Exp. Share'],
+    tags:['VMAX','High Damage','Energy Cycle'],
+    difficulty:'ปานกลาง', winRate:50, budget:'฿3,000–5,000', energy:'⚡⚡',
+    decklist:{
+      pokemon:[{name:'Pikachu VMAX',qty:3},{name:'Pikachu V',qty:4},{name:'Zeraora V',qty:1},{name:'Crobat V',qty:2}],
+      trainer:[{name:'Iono',qty:3},{name:"Professor's Research",qty:3},{name:'Raihan',qty:2},{name:'Electric Generator',qty:4},{name:'Exp. Share',qty:3},{name:'Ultra Ball',qty:4},{name:"Boss's Orders",qty:2},{name:'Switch',qty:3},{name:'Escape Rope',qty:2}],
+      energy:[{name:'Basic Lightning Energy',qty:11}]
+    }
+  },
+  {
+    id:'e8', type:'electric', tier:'C', typeLabel:'⚡ ไฟฟ้า',
+    name:'Jolteon VMAX Quick', subname:'Speed Spread Punisher',
+    strategy:'Jolteon VMAX ท่า Max Thunder Spear 90 สเปรด Bench ทุกโปเกมอน ท่า Max Thunderstrike 190 โจมตีตรง เด็คเร็วและยืดหยุ่น เหมาะสำหรับมือใหม่ที่อยากเล่น VMAX',
+    keyCards:['Jolteon VMAX','Jolteon V','Electric Generator','Iono'],
+    tags:['VMAX','Fast','Beginner'],
+    difficulty:'ง่าย', winRate:44, budget:'฿1,500–3,000', energy:'⚡⚡',
+    decklist:{
+      pokemon:[{name:'Jolteon VMAX',qty:3},{name:'Jolteon V',qty:4},{name:'Raichu V',qty:2},{name:'Crobat V',qty:2}],
+      trainer:[{name:'Iono',qty:4},{name:"Professor's Research",qty:3},{name:'Penny',qty:2},{name:'Electric Generator',qty:4},{name:'Ultra Ball',qty:4},{name:'Nest Ball',qty:3},{name:"Boss's Orders",qty:2},{name:'Switch',qty:2},{name:'Escape Rope',qty:1}],
+      energy:[{name:'Basic Lightning Energy',qty:12}]
+    }
+  },
+  {
+    id:'e9', type:'electric', tier:'A', typeLabel:'⚡ ไฟฟ้า',
+    name:'Electrode ex Energy Bomb', subname:'Turbo Setup Engine',
+    strategy:'Electrode ex Ability "Transistor" Attach Energy จาก Discard ไปทุกโปเกมอนบน Bench เป็น Setup Engine ที่ดีมาก จับคู่กับ Miraidon ex หรือ Raichu V เพื่อโจมตีได้ทันที',
+    keyCards:['Electrode ex','Voltorb','Miraidon ex','Electric Generator'],
+    tags:['Energy Bomb','Setup','Turbo Support'],
+    difficulty:'ปานกลาง', winRate:63, budget:'฿5,000–8,000', energy:'⚡⚡',
+    decklist:{
+      pokemon:[{name:'Electrode ex',qty:3},{name:'Voltorb',qty:4},{name:'Miraidon ex',qty:3},{name:'Crobat V',qty:2}],
+      trainer:[{name:'Iono',qty:3},{name:"Professor's Research",qty:3},{name:'Penny',qty:2},{name:'Electric Generator',qty:4},{name:'Level Ball',qty:4},{name:'Ultra Ball',qty:3},{name:"Boss's Orders",qty:2},{name:'Switch',qty:2},{name:'Rare Candy',qty:3}],
+      energy:[{name:'Basic Lightning Energy',qty:10}]
+    }
+  },
+  {
+    id:'e10', type:'electric', tier:'A', typeLabel:'⚡ ไฟฟ้า',
+    name:'Xurkitree VSTAR Surge', subname:'Board Wipe One-Shot',
+    strategy:'Xurkitree VSTAR VSTAR Power "Lighting Storm" โจมตีทุกโปเกมอนของฝ่ายตรงข้ามพร้อมกัน เหมาะกับเมตาที่มีเด็ค Bench-Heavy อาจรับ Prize 4 ใบในรอบเดียว',
+    keyCards:['Xurkitree VSTAR','Xurkitree V','Electric Generator','Superior Energy Retrieval'],
+    tags:['VSTAR','Board Wipe','Burst'],
+    difficulty:'ยาก', winRate:60, budget:'฿5,500–8,500', energy:'⚡⚡',
+    decklist:{
+      pokemon:[{name:'Xurkitree VSTAR',qty:3},{name:'Xurkitree V',qty:4},{name:'Raichu V',qty:1},{name:'Crobat V',qty:2}],
+      trainer:[{name:'Iono',qty:3},{name:"Professor's Research",qty:3},{name:'Raihan',qty:2},{name:'Electric Generator',qty:4},{name:'Superior Energy Retrieval',qty:3},{name:'Ultra Ball',qty:4},{name:"Boss's Orders",qty:2},{name:'Switch',qty:2},{name:'Escape Rope',qty:2}],
+      energy:[{name:'Basic Lightning Energy',qty:11}]
+    }
+  },
+
+// ── FIRE f6–f10 ──────────────────────────────────────────────────────────────
+  {
+    id:'f6', type:'fire', tier:'A', typeLabel:'🔥 ไฟ',
+    name:'Entei V Sacred Fire', subname:'Welder Turbo Legacy',
+    strategy:'Entei V ท่า Sacred Fire 190 One-Prizer ที่แรง จัดคู่กับ Welder Supporter สำหรับ Attach Energy เร็ว ร่วมกับ Magma Basin ทำให้ Energy ติดทุกรอบโดยไม่ต้องพักเทิร์น',
+    keyCards:['Entei V','Welder','Magma Basin','Basic Fire Energy'],
+    tags:['Single-Prize','Turbo','Aggressive'],
+    difficulty:'ง่าย', winRate:55, budget:'฿2,000–3,500', energy:'🔥🔥',
+    decklist:{
+      pokemon:[{name:'Entei V',qty:4},{name:'Crobat V',qty:2},{name:'Dedenne GX',qty:2},{name:'Radiant Charizard',qty:1}],
+      trainer:[{name:'Welder',qty:4},{name:"Professor's Research",qty:3},{name:'Marnie',qty:3},{name:'Quick Ball',qty:4},{name:'Magma Basin',qty:3},{name:'Ultra Ball',qty:3},{name:"Boss's Orders",qty:3},{name:'Energy Retrieval',qty:2},{name:'Switch',qty:2}],
+      energy:[{name:'Basic Fire Energy',qty:13}]
+    }
+  },
+  {
+    id:'f7', type:'fire', tier:'B', typeLabel:'🔥 ไฟ',
+    name:'Infernape ex Blaze', subname:'Stage2 Burst Fighter',
+    strategy:'Infernape ex Ability "Blaze" เพิ่มดาเมจเมื่อ HP เหลือต่ำกว่าครึ่ง ท่า Flare Blitz 260 โจมตีแรงมาก ใช้ Rare Candy กระโดด Stage2 ให้เร็ว เน้น Burst Damage ครั้งเดียวจบ',
+    keyCards:['Infernape ex','Monferno','Chimchar','Rare Candy'],
+    tags:['Stage2','Burst','Blaze Ability'],
+    difficulty:'ปานกลาง', winRate:52, budget:'฿3,000–5,000', energy:'🔥🔥',
+    decklist:{
+      pokemon:[{name:'Infernape ex',qty:3},{name:'Monferno',qty:2},{name:'Chimchar',qty:4},{name:'Radiant Charizard',qty:1},{name:'Crobat V',qty:2}],
+      trainer:[{name:'Iono',qty:3},{name:"Professor's Research",qty:3},{name:'Arezu',qty:2},{name:'Rare Candy',qty:4},{name:'Magma Basin',qty:3},{name:'Ultra Ball',qty:4},{name:'Level Ball',qty:3},{name:"Boss's Orders",qty:2},{name:'Switch',qty:2}],
+      energy:[{name:'Basic Fire Energy',qty:11}]
+    }
+  },
+  {
+    id:'f8', type:'fire', tier:'B', typeLabel:'🔥 ไฟ',
+    name:'Typhlosion ex Eruption', subname:'Volcanic Chain Stage2',
+    strategy:'Typhlosion ex Ability ช่วย Attach Energy พิเศษ ท่า Eruption 260 ดาเมจสูง เด็คนี้ใช้ Stage2 Chain + Magma Basin ที่ต้องวางแผนล่วงหน้า เหมาะกับผู้เล่นที่ชอบ Setup',
+    keyCards:['Typhlosion ex','Quilava','Cyndaquil','Magma Basin'],
+    tags:['Stage2','Chain','Energy Ramp'],
+    difficulty:'ยาก', winRate:50, budget:'฿3,500–5,500', energy:'🔥🔥',
+    decklist:{
+      pokemon:[{name:'Typhlosion ex',qty:3},{name:'Quilava',qty:2},{name:'Cyndaquil',qty:4},{name:'Radiant Charizard',qty:1},{name:'Crobat V',qty:2}],
+      trainer:[{name:'Iono',qty:3},{name:"Professor's Research",qty:3},{name:'Raihan',qty:2},{name:'Rare Candy',qty:4},{name:'Magma Basin',qty:4},{name:'Ultra Ball',qty:3},{name:'Level Ball',qty:3},{name:"Boss's Orders",qty:2},{name:'Energy Retrieval',qty:2}],
+      energy:[{name:'Basic Fire Energy',qty:11}]
+    }
+  },
+  {
+    id:'f9', type:'fire', tier:'B', typeLabel:'🔥 ไฟ',
+    name:'Blaziken VMAX Blaze Kick', subname:'Draw Engine Double-Prize',
+    strategy:'Blaziken VMAX Ability "Battle Sense" จับไพ่ 2 ใบต้นเทิร์น ท่า Max Blaze Kick 230 แรงและเร็ว เด็ค Consistent มากด้วย Draw Engine ในตัวทำให้ Setup ได้ทุกเกม',
+    keyCards:['Blaziken VMAX','Blaziken V','Magma Basin','Superior Energy Retrieval'],
+    tags:['VMAX','Draw Engine','Consistent'],
+    difficulty:'ง่าย', winRate:49, budget:'฿2,500–4,000', energy:'🔥🔥',
+    decklist:{
+      pokemon:[{name:'Blaziken VMAX',qty:3},{name:'Blaziken V',qty:4},{name:'Radiant Charizard',qty:1},{name:'Crobat V',qty:2}],
+      trainer:[{name:"Professor's Research",qty:3},{name:'Marnie',qty:3},{name:'Raihan',qty:2},{name:'Ultra Ball',qty:4},{name:'Magma Basin',qty:3},{name:'Superior Energy Retrieval',qty:3},{name:"Boss's Orders",qty:2},{name:'Switch',qty:3},{name:'Escape Rope',qty:2}],
+      energy:[{name:'Basic Fire Energy',qty:11}]
+    }
+  },
+  {
+    id:'f10', type:'fire', tier:'A', typeLabel:'🔥 ไฟ',
+    name:'Volcarona V Solar Setup', subname:'Fire Turbo Support Engine',
+    strategy:'Volcarona V Ability "Heated Wing" Attach Energy จาก Hand ไปทุกโปเกมอนบน Bench Setup เร็วมาก จับคู่กับ Charizard ex เป็น Main Attacker กลายเป็น Turbo Fire ที่ทรงพลัง',
+    keyCards:['Volcarona V','Charizard ex','Magma Basin','Iono'],
+    tags:['Setup Engine','Turbo','Support'],
+    difficulty:'ปานกลาง', winRate:61, budget:'฿4,500–7,000', energy:'🔥🔥',
+    decklist:{
+      pokemon:[{name:'Volcarona V',qty:3},{name:'Charizard ex',qty:3},{name:'Charmander',qty:4},{name:'Charmeleon',qty:2},{name:'Radiant Charizard',qty:1}],
+      trainer:[{name:'Iono',qty:3},{name:"Professor's Research",qty:3},{name:'Raihan',qty:2},{name:'Rare Candy',qty:4},{name:'Magma Basin',qty:3},{name:'Ultra Ball',qty:4},{name:"Boss's Orders",qty:2},{name:'Switch',qty:2},{name:'Energy Retrieval',qty:2}],
+      energy:[{name:'Basic Fire Energy',qty:11}]
+    }
+  }
+];
+
+// ============ POKEMON DEX ID LOOKUP ============
+const pkmnId = {
+  // Thai names
+  'เมก้าดาร์กไรex':491,'ดาร์กไรex':491,'ดาร์กไร':491,
+  'เมก้าเก็คโคกะex':658,'เก็คโคกะex':658,'กอเปอร์':657,
+  'โมรุเปโกะex':484,
+  // Dark type
+  'Sableye ex':302,'Sableye':302,'Comfey':856,
+  'Froslass':478,'Snorunt':361,
+  "N's Zoroark ex":571,"N's Zorua":570,'Zoroark ex':571,'Zorua':570,
+  "Rocket's Honchkrow ex":430,"Rocket's Honchkrow":430,'Honchkrow':430,'Murkrow':198,
+  'Porygon2':233,'Porygon':137,
+  "Giovanni's Machamp ex":68,'Machamp ex':68,
+  "Marnie's Grimmsnarl ex":861,"Marnie's Morgrem":860,"Marnie's Impidimp":859,
+  'Grimmsnarl ex':861,'Morgrem':860,'Impidimp':859,
+  'Darkrai VSTAR':491,'Darkrai V':491,'Darkrai':491,
+  'Galarian Moltres V':146,'Crobat V':169,'Shaymin V':492,
+  // Water type
+  'Chien-Pao ex':1002,'Chien-Pao':1002,
+  'Baxcalibur':998,'Arctibax':997,'Frigibax':996,
+  'Bibarel':400,'Bidoof':399,
+  'Slowking ex':199,'Slowking':199,'Slowpoke':79,
+  'Jirachi ex':385,'Jirachi':385,'Ditto':132,
+  'Kyogre ex':382,'Kyogre':382,
+  'Radiant Greninja':658,'Greninja':658,'Drizzile':817,'Sobble':816,
+  'Inteleon':818,'Origin Forme Palkia V':484,'Palkia ex':484,
+  // Electric type
+  'Raging Bolt ex':1021,
+  'Teal Mask Ogerpon ex':1017,'Ogerpon ex':1017,
+  'Electrode ex':101,'Electrode':101,
+  'Miraidon ex':1007,'Miraidon':1007,
+  'Iron Hands ex':992,'Iron Hands':992,
+  'Iron Jugulis ex':1001,'Iron Jugulis':1001,
+  'Iron Treads ex':990,'Iron Treads':990,
+  'Raichu V':26,'Raichu':26,'Pikachu':25,'Pikachu ex':25,
+  'เมก้าเมนเนคทริคex':310,'Manectric':310,'Electrike':309,
+  'Regieleki VMAX':895,'Regieleki V':895,'Regieleki':895,
+  'Flaaffy':180,'Mareep':179,'Boltundex V':877,
+  // Fire type
+  'Charizard ex':6,'Charizard':6,'Charmeleon':5,'Charmander':4,
+  'Arcanine ex':59,'Arcanine':59,'Growlithe':58,
+  "Ethan's Typhlosion":157,"Ethan's Quilava":156,"Ethan's Cyndaquil":155,
+  'Typhlosion':157,'Quilava':156,'Cyndaquil':155,
+  'Entei V':244,'Entei':244,
+  'Armarouge ex':936,'Armarouge':936,'Charcadet':935,
+  'Iron Moth ex':994,'Iron Moth':994,'Radiant Charizard':6,
+  'Cinderace VMAX':815,'Cinderace V':815,'Cinderace':815,
+  'Dedenne GX':702,'Dedenne':702,
+};
+
+// YouTube links per deck (search queries + TCGThailand blog)
+const YT_BASE = 'https://www.youtube.com/results?search_query=';
+const deckYoutube = {
+  d1:{ title:'เด็คเมก้าดาร์กไรex', url: YT_BASE+'เด็ค+ดาร์กไร+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  d2:{ title:"เด็ค N's Zoroark ex", url: YT_BASE+"N%27s+Zoroark+เด็ค+โปเกมอนการ์ดไทย", blog:'https://www.tcgthailand.com/blog' },
+  d3:{ title:"เด็ค Rocket's Honchkrow", url: YT_BASE+'Honchkrow+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog/07ea49ac-3cde-4aab-953d-f2444c89309d' },
+  d4:{ title:"เด็ค Grimmsnarl ex", url: YT_BASE+'Grimmsnarl+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  d5:{ title:'เด็ค Darkrai VSTAR', url: YT_BASE+'Darkrai+VSTAR+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  w1:{ title:'เด็คเมก้าเก็คโคกะex', url: YT_BASE+'เด็ค+เก็คโคกะ+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  w2:{ title:'เด็ค Chien-Pao ex', url: YT_BASE+'Chien-Pao+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  w3:{ title:'เด็คโมรุเปโกะex', url: YT_BASE+'Palkia+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  w4:{ title:'เด็ค Slowking Control', url: YT_BASE+'Slowking+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  w5:{ title:'เด็ค Kyogre ex', url: YT_BASE+'Kyogre+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  e1:{ title:'เด็ค Raging Bolt ex', url: YT_BASE+'Raging+Bolt+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  e2:{ title:'เด็ค Miraidon ex', url: YT_BASE+'Miraidon+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  e3:{ title:'เด็ค Mega Manectric ex', url: YT_BASE+'Manectric+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  e4:{ title:'เด็ค Regieleki VMAX', url: YT_BASE+'Regieleki+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  e5:{ title:'เด็ค Pikachu ex', url: YT_BASE+'Pikachu+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  f1:{ title:'เด็ค Charizard ex', url: YT_BASE+'Charizard+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  f2:{ title:"เด็ค Ethan's Typhlosion", url: YT_BASE+'Typhlosion+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  f3:{ title:'เด็ค Entei V', url: YT_BASE+'Entei+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  f4:{ title:'เด็ค Armarouge ex', url: YT_BASE+'Armarouge+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  f5:{ title:'เด็ค Cinderace VMAX', url: YT_BASE+'Cinderace+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  d6:{ title:'เด็ค Yveltal ex Stall', url: YT_BASE+'Yveltal+ex+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  d7:{ title:'เด็ค Weavile ex Spread', url: YT_BASE+'Weavile+ex+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  d8:{ title:'เด็ค Umbreon VMAX', url: YT_BASE+'Umbreon+VMAX+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  d9:{ title:'เด็ค Darkrai VSTAR', url: YT_BASE+'Darkrai+VSTAR+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  d10:{ title:'เด็ค Hisuian Zoroark VSTAR', url: YT_BASE+'Zoroark+VSTAR+Lost+Zone+เด็ค+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  w6:{ title:'เด็ค Walking Wake ex', url: YT_BASE+'Walking+Wake+ex+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  w7:{ title:'เด็ค Blastoise ex', url: YT_BASE+'Blastoise+ex+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  w8:{ title:'เด็ค Gyarados ex', url: YT_BASE+'Gyarados+ex+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  w9:{ title:'เด็ค Empoleon V Lock', url: YT_BASE+'Empoleon+V+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  w10:{ title:'เด็ค Lapras VMAX', url: YT_BASE+'Lapras+VMAX+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  e6:{ title:'เด็ค Magnezone ex', url: YT_BASE+'Magnezone+ex+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  e7:{ title:'เด็ค Pikachu VMAX', url: YT_BASE+'Pikachu+VMAX+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  e8:{ title:'เด็ค Jolteon VMAX', url: YT_BASE+'Jolteon+VMAX+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  e9:{ title:'เด็ค Electrode ex Turbo', url: YT_BASE+'Electrode+ex+Miraidon+เด็ค+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  e10:{ title:'เด็ค Xurkitree VSTAR', url: YT_BASE+'Xurkitree+VSTAR+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  f6:{ title:'เด็ค Entei V', url: YT_BASE+'Entei+V+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  f7:{ title:'เด็ค Infernape ex', url: YT_BASE+'Infernape+ex+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  f8:{ title:'เด็ค Typhlosion ex', url: YT_BASE+'Typhlosion+ex+เด็ค+โปเกมอนการ์ด+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  f9:{ title:'เด็ค Blaziken VMAX', url: YT_BASE+'Blaziken+VMAX+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+  f10:{ title:'เด็ค Volcarona V Solar', url: YT_BASE+'Volcarona+Charizard+เด็ค+โปเกมอน+ไทย', blog:'https://www.tcgthailand.com/blog' },
+};
+
+const PKART2 = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
+
+// ---- STATIC CARD IMAGE CACHE (pre-fetched URLs — no runtime API calls needed) ----
+const I2 = 'https://images.pokemontcg.io/';
+const SC2 = 'https://images.scrydex.com/pokemon/';
+const BASE_TCG2 = 'https://tcgv2-r2.tumwebsme.com/cdn-cgi/image/width=250,height=350,quality=75,format=auto,fit=contain/production/products/';
+
+const staticCardImgs = {
+  // ── SUPPORTERS ──────────────────────────────────────────────────────────
+  'Iono':                        I2+'sv4pt5/237.png',
+  "Professor's Research":        I2+'zsv10pt5/85.png',
+  "Boss's Orders":               I2+'sv2/265.png',
+  'Arven':                       I2+'sv10/161.png',
+  'Melony':                      I2+'swsh12pt5gg/GG64.png',
+  'Irida':                       I2+'swsh12pt5gg/GG63.png',
+  'Penny':                       I2+'sv4pt5/239.png',
+  'Raihan':                      I2+'swsh12pt5/140.png',
+  'Roxanne':                     I2+'swsh12pt5gg/GG66.png',
+  'Arezu':                       I2+'swsh11/204.png',
+  "Professor Sada's Vitality":   I2+'sv8pt5/120.png',
+  "Colress's Experiment":        I2+'swsh12pt5gg/GG59.png',
+  'Marnie':                      I2+'swsh1/169.png',
+  "Marnie's Pride":              I2+'swsh9/171.png',
+  'Judge':                       I2+'swsh12tg/TG25.png',
+  'N':                           I2+'bw9/96.png',
+  // ── ITEMS ────────────────────────────────────────────────────────────────
+  'Ultra Ball':                  I2+'sv4pt5/91.png',
+  'Nest Ball':                   I2+'sv4pt5/84.png',
+  'Quick Ball':                  I2+'swsh8/237.png',
+  'Level Ball':                  I2+'swsh5/181.png',
+  'Switch':                      I2+'me2/123.png',
+  'Escape Rope':                 I2+'swsh5/125.png',
+  'Counter Catcher':             I2+'sv4/264.png',
+  'Rare Candy':                  I2+'me1/175.png',
+  'Battle VIP Pass':             I2+'swsh8/225.png',
+  'Lost Vacuum':                 I2+'swsh12pt5/135.png',
+  'Echoing Horn':                I2+'swsh6/225.png',
+  'Dark Patch':                  I2+'swsh11/216.png',
+  'Electric Generator':          I2+'sv4pt5/79.png',
+  'Superior Energy Retrieval':   I2+'sv2/277.png',
+  'Energy Retrieval':            I2+'rsv10pt5/82.png',
+  'Energy Search':               SC2+'me3-72/small',
+  'Pal Pad':                     I2+'sv1/182.png',
+  'Magma Basin':                 I2+'swsh9/185.png',
+  'Capacious Bucket':            I2+'swsh2/156.png',
+  'Path to the Peak':            I2+'swsh10/213.png',
+  'Exp. Share':                  I2+'sv1/174.png',
+  'Lost City':                   I2+'swsh11/161.png',
+  'Switch Cart':                 I2+'swsh10/154.png',
+  'Counter Gain':                SC2+'me2pt5-259/small',
+  'Acrobike':                    I2+'swsh4/78.png',
+  // ── ENERGIES ─────────────────────────────────────────────────────────────
+  'Basic Darkness Energy':       I2+'sv6pt5/98.png',
+  'Darkness Energy':             I2+'sv6pt5/98.png',
+  'Basic Water Energy':          I2+'sv2/279.png',
+  'Water Energy':                I2+'sv2/279.png',
+  'Basic Lightning Energy':      I2+'sv1/257.png',
+  'Lightning Energy':            I2+'sv1/257.png',
+  'Basic Fire Energy':           I2+'sv3/230.png',
+  'Fire Energy':                 I2+'sv3/230.png',
+  'Double Turbo Energy':         I2+'swsh10/216.png',
+  // ── THAI EXCLUSIVE (TCGThailand CDN) ────────────────────────────────────
+  'เมก้าดาร์กไรex':   BASE_TCG2+'405151a0-f92e-412f-ab36-83b8e9011f16/MA5_T-238.png',
+  'เมก้าเก็คโคกะex':  BASE_TCG2+'611c3b3b-b023-4b07-b23a-3827a4fae2df/MA5_T-225.png',
+  'โมรุเปโกะex':       BASE_TCG2+'830f4c9f-f5ce-4d64-a88d-1d43b81e69fb/MA5_T-230.png',
+  'เมก้าเมนเนคทริคex': BASE_TCG2+'d0086afa-6e47-4eb1-b9eb-b04c1fe80898/MA5_T-237.png',
+};
+
+// Live cache — pre-populated; grows at runtime for unknown cards
+const cardImgCache = {...staticCardImgs};
+
+// Kept for backwards compatibility in Thai lookup
+const thaiCardImgMap = {
+  'เมก้าดาร์กไรex':   BASE_TCG2+'405151a0-f92e-412f-ab36-83b8e9011f16/MA5_T-238.png',
+  'เมก้าเก็คโคกะex':  BASE_TCG2+'611c3b3b-b023-4b07-b23a-3827a4fae2df/MA5_T-225.png',
+  'โมรุเปโกะex':       BASE_TCG2+'830f4c9f-f5ce-4d64-a88d-1d43b81e69fb/MA5_T-230.png',
+  'เมก้าเมนเนคทริคex': BASE_TCG2+'d0086afa-6e47-4eb1-b9eb-b04c1fe80898/MA5_T-237.png',
+};
+
+function normalizeName(name) {
+  return name
+    .replace(/^Basic /, '')
+    .replace(/^Origin Forme /, '')
+    .replace(/^Galarian /, '')
+    .replace(/^Radiant /, '')
+    .trim();
+}
+
+// Resolve card image — static cache first, then PokeAPI sprite fallback
+async function fetchRealCardImg(name) {
+  if (name in cardImgCache) return cardImgCache[name];
+  // Thai cards: PokeAPI sprite fallback
+  if (/[ก-๙]/.test(name)) {
+    const id = pkmnId[name];
+    return (cardImgCache[name] = id ? PKART2 + id + '.png' : null);
+  }
+  // English Pokémon: try API (may be blocked under file://, fallback to sprite)
+  const variants = [...new Set([name, normalizeName(name)])].filter(Boolean);
+  for (const v of variants) {
+    try {
+      const r = await fetch(
+        `https://api.pokemontcg.io/v2/cards?q=name:"${encodeURIComponent(v)}"&pageSize=1&orderBy=-set.releaseDate&select=id,name,images`,
+        { cache: 'force-cache' }
+      );
+      if (!r.ok) continue;
+      const j = await r.json();
+      const url = j.data?.[0]?.images?.small;
+      if (url) return (cardImgCache[name] = url);
+    } catch {}
+  }
+  const id = pkmnId[name];
+  return (cardImgCache[name] = id ? PKART2 + id + '.png' : null);
+}
+
+// Build the visual card grid — images from static cache render immediately
+function buildDeckVisual(decklist) {
+  const sections = [
+    { arr: decklist.pokemon, cat: 'pokemon', label: '🐾 โปเกมอน', color:'#3498db' },
+    { arr: decklist.trainer, cat: 'trainer', label: '🃏 เทรนเนอร์', color:'#f39c12' },
+    { arr: decklist.energy,  cat: 'energy',  label: '⚡ พลังงาน',  color:'#2ecc71' },
+  ];
+  const entries = [];
+  let si = 0;
+  let html = '';
+
+  for (const { arr, cat, label, color } of sections) {
+    const total = arr.reduce((s,c) => s+c.qty, 0);
+    html += `<div style="margin-bottom:8px;font-size:0.78rem;color:var(--muted);font-weight:600;">${label} <span style="color:${color};">(${total} ใบ)</span></div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:7px;margin-bottom:16px;">`;
+    for (const card of arr) {
+      // Resolve sprite for unknown Pokémon via pkmnId
+      const fallbackSprite = pkmnId[card.name] ? PKART2 + pkmnId[card.name] + '.png' : '';
+      const initSrc = cardImgCache[card.name] || fallbackSprite;
+      const hasImg = !!initSrc;
+      for (let i = 0; i < card.qty; i++) {
+        const myIdx = si++;
+        entries.push({ name: card.name, si: myIdx, color, cat });
+        const shortName = card.name.length > 19 ? card.name.slice(0,18)+'…' : card.name;
+        const catIcon = {pokemon:'🐾',trainer:'🃏',energy:'⚡'}[cat];
+        html += `
+          <div onclick="zoomCard(${myIdx})"
+            style="position:relative;border-radius:7px;overflow:hidden;border:1.5px solid ${color}33;background:#0d1117;aspect-ratio:2.5/3.5;box-shadow:0 2px 8px rgba(0,0,0,0.5);cursor:zoom-in;transition:transform 0.15s,box-shadow 0.15s;"
+            onmouseover="this.style.transform='scale(1.06)';this.style.boxShadow='0 6px 24px rgba(0,0,0,0.7)';this.style.borderColor='${color}88';"
+            onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.5)';this.style.borderColor='${color}33';">
+            <div id="cs-ld-${myIdx}" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;background:#0d1117;transition:opacity 0.3s;opacity:${hasImg?'0':'1'};">
+              <span style="font-size:1.4rem;opacity:0.25;">${catIcon}</span>
+            </div>
+            <img id="cs-${myIdx}" src="${initSrc}" alt="${card.name}"
+              style="width:100%;height:100%;object-fit:cover;display:block;"
+              onload="var l=document.getElementById('cs-ld-${myIdx}');if(l)l.style.opacity='0';"
+              onerror="this.style.opacity='0'">
+            <div style="position:absolute;bottom:0;left:0;right:0;z-index:3;background:linear-gradient(transparent,rgba(0,0,0,0.9));padding:14px 3px 3px;text-align:center;">
+              <div style="font-size:0.53rem;color:#fff;line-height:1.2;font-weight:600;">${shortName}</div>
+              <div style="font-size:0.6rem;color:${color};font-weight:800;">×${card.qty}</div>
+            </div>
+            <div style="position:absolute;top:3px;right:3px;z-index:4;background:rgba(0,0,0,0.5);border-radius:4px;padding:2px 4px;font-size:0.55rem;color:#888;">🔍</div>
+          </div>`;
+      }
+    }
+    html += '</div>';
+  }
+  return { html, entries };
+}
+
+// ---- CARD ZOOM CAROUSEL LIGHTBOX ----
+let zoomDeck = [];    // [{name, si, color, cat}] — all card slots in current deck
+let zoomCurIdx = 0;  // which slot is currently centred
+
+function getZoomSrc(si) {
+  const img = document.getElementById('cs-' + si);
+  return img ? img.src : '';
+}
+
+function zoomCard(si) {
+  const idx = zoomDeck.findIndex(c => c.si === si);
+  if (idx < 0) return;
+  zoomCurIdx = idx;
+  renderZoom(true);
+  document.getElementById('cardZoom').style.display = 'flex';
+}
+
+function renderZoom(animate) {
+  const n = zoomDeck.length;
+  if (!n) return;
+  const cur  = zoomDeck[zoomCurIdx];
+  const prev = zoomDeck[(zoomCurIdx - 1 + n) % n];
+  const next = zoomDeck[(zoomCurIdx + 1) % n];
+
+  const catLabel = {pokemon:'โปเกมอน',trainer:'เทรนเนอร์',energy:'พลังงาน'}[cur.cat] || '';
+
+  document.getElementById('zoomCardName').textContent  = cur.name;
+  document.getElementById('zoomCardName').style.color  = cur.color || '#f3f4f6';
+  document.getElementById('zoomCardSub').textContent   = catLabel;
+  document.getElementById('zoomCounter').textContent   = `${zoomCurIdx + 1} / ${n}`;
+
+  const mainImg = document.getElementById('zoomImgMain');
+  if (animate) { mainImg.style.opacity = '0'; }
+  mainImg.src = getZoomSrc(cur.si);
+  mainImg.style.boxShadow = `0 0 70px ${cur.color || '#fff'}55, 0 0 140px rgba(0,0,0,0.95)`;
+  if (animate) { requestAnimationFrame(() => { mainImg.style.opacity = '1'; }); }
+
+  const showSides = n > 1;
+  document.getElementById('zoomSidePrev').style.display = showSides ? '' : 'none';
+  document.getElementById('zoomSideNext').style.display = showSides ? '' : 'none';
+  document.getElementById('zoomPrevBtn').style.display  = showSides ? '' : 'none';
+  document.getElementById('zoomNextBtn').style.display  = showSides ? '' : 'none';
+
+  if (showSides) {
+    document.getElementById('zoomImgPrev').src = getZoomSrc(prev.si);
+    document.getElementById('zoomImgNext').src = getZoomSrc(next.si);
+  }
+
+  // Thumbnail strip — highlight active
+  const strip = document.getElementById('zoomStrip');
+  if (strip) {
+    strip.innerHTML = '';
+    const maxThumb = 15;
+    const half = Math.floor(maxThumb / 2);
+    let start = Math.max(0, zoomCurIdx - half);
+    let end   = Math.min(n, start + maxThumb);
+    if (end - start < maxThumb) start = Math.max(0, end - maxThumb);
+    for (let i = start; i < end; i++) {
+      const e = zoomDeck[i];
+      const thumbSrc = getZoomSrc(e.si);
+      const active = i === zoomCurIdx;
+      const thumb = document.createElement('img');
+      thumb.src = thumbSrc;
+      thumb.title = e.name;
+      thumb.style.cssText = `height:${active?'48px':'36px'};border-radius:5px;cursor:pointer;border:2px solid ${active ? (e.color||'#fff') : 'transparent'};opacity:${active?'1':'0.45'};transition:all 0.15s;flex-shrink:0;object-fit:cover;`;
+      thumb.onclick = () => { zoomCurIdx = i; renderZoom(true); };
+      strip.appendChild(thumb);
+    }
+    // Scroll the active thumb into view
+    const thumbEls = strip.children;
+    const activeEl = thumbEls[zoomCurIdx - start];
+    if (activeEl) activeEl.scrollIntoView({ block:'nearest', inline:'center', behavior:'smooth' });
+  }
+}
+
+function zoomNav(dir) {
+  const n = zoomDeck.length;
+  if (!n) return;
+  zoomCurIdx = (zoomCurIdx + dir + n) % n;
+  renderZoom(true);
+}
+
+function closeZoom() {
+  document.getElementById('cardZoom').style.display = 'none';
+}
+
+// Close on backdrop click
+document.getElementById('cardZoom').addEventListener('click', function(e) {
+  if (e.target === this) closeZoom();
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (document.getElementById('cardZoom').style.display === 'none') return;
+  if (e.key === 'Escape')       { closeZoom(); }
+  else if (e.key === 'ArrowLeft')  { zoomNav(-1); }
+  else if (e.key === 'ArrowRight') { zoomNav(1); }
+});
+
+// Async loader for any cards not already in cache (e.g. unknown Pokémon names)
+async function loadCardImages(entries) {
+  const unknownNames = [...new Set(entries.map(e => e.name).filter(n => !(n in cardImgCache)))];
+  if (!unknownNames.length) return;
+  await Promise.all(unknownNames.map(async name => {
+    const url = await fetchRealCardImg(name);
+    if (!url) return;
+    entries.filter(e => e.name === name).forEach(e => {
+      const img = document.getElementById('cs-' + e.si);
+      const ld  = document.getElementById('cs-ld-' + e.si);
+      if (!img) return;
+      img.onload = () => { if (ld) ld.style.opacity = '0'; };
+      img.onerror = () => { if (ld) ld.style.display = 'none'; };
+      img.src = url;
+    });
+  }));
+}
+
+// Type colors
+const typeColors = {
+  dark:    { bg:'#2d1b4e', grad:'linear-gradient(135deg,#1a0830 0%,#2d1b4e 60%,#3d1060 100%)', border:'#7c3aed', text:'#c084fc', icon:'🌑', label:'ความมืด' },
+  water:   { bg:'#0c2a4a', grad:'linear-gradient(135deg,#051525 0%,#0c2a4a 60%,#0d3b6b 100%)', border:'#2563eb', text:'#60a5fa', icon:'💧', label:'น้ำ' },
+  electric:{ bg:'#2d2600', grad:'linear-gradient(135deg,#1a1500 0%,#2d2600 60%,#3d3500 100%)', border:'#d97706', text:'#fbbf24', icon:'⚡', label:'ไฟฟ้า' },
+  fire:    { bg:'#3d1205', grad:'linear-gradient(135deg,#200800 0%,#3d1205 60%,#5a1a05 100%)', border:'#ea580c', text:'#fb923c', icon:'🔥', label:'ไฟ' }
+};
+
+const tierWinColor = { S:'#FFD700', A:'#3498db', B:'#2ecc71', C:'#888' };
+const tierBg = { S:'linear-gradient(135deg,#b8860b,#FFD700)', A:'linear-gradient(135deg,#1a6fa8,#3498db)', B:'linear-gradient(135deg,#1a7a40,#2ecc71)', C:'linear-gradient(135deg,#555,#888)' };
+
+// Pokémon artwork images (PokeAPI official artwork + TCGThailand for Thai exclusives)
+const BASE_TCG = 'https://tcgv2-r2.tumwebsme.com/cdn-cgi/image/width=250,height=350,quality=75,format=auto,fit=contain/production/products/';
+const PKART = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
+const deckImages = {
+  d1: BASE_TCG + '405151a0-f92e-412f-ab36-83b8e9011f16/MA5_T-238.png',
+  d2: PKART + '571.png',   // Zoroark
+  d3: PKART + '430.png',   // Honchkrow
+  d4: PKART + '861.png',   // Grimmsnarl
+  d5: PKART + '491.png',   // Darkrai
+  w1: BASE_TCG + '611c3b3b-b023-4b07-b23a-3827a4fae2df/MA5_T-225.png',
+  w2: PKART + '1002.png',  // Chien-Pao
+  w3: BASE_TCG + '830f4c9f-f5ce-4d64-a88d-1d43b81e69fb/MA5_T-230.png',
+  w4: PKART + '199.png',   // Slowking
+  w5: PKART + '382.png',   // Kyogre
+  e1: PKART + '1021.png',  // Raging Bolt
+  e2: PKART + '1007.png',  // Miraidon
+  e3: PKART + '310.png',   // Manectric
+  e4: PKART + '895.png',   // Regieleki
+  e5: PKART + '25.png',    // Pikachu
+  f1: PKART + '6.png',     // Charizard
+  f2: PKART + '157.png',   // Typhlosion
+  f3: PKART + '244.png',   // Entei
+  f4: PKART + '936.png',   // Armarouge
+  f5: PKART + '815.png',   // Cinderace
+};
+
+let currentDeckType = 'all';
+
+function filterDeckType(type) {
+  currentDeckType = type;
+  document.querySelectorAll('.deck-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+  renderDecks();
+}
+
+function renderDecks() {
+  const filtered = currentDeckType === 'all' ? decks : decks.filter(d => d.type === currentDeckType);
+  const tc = t => typeColors[t];
+  document.getElementById('deckGrid').innerHTML = filtered.map(d => {
+    const imgUrl = deckImages[d.id] || '';
+    const isTCG = imgUrl.includes('tcgv2-r2'); // TCGThailand card image (portrait)
+    return `
+    <div class="deck-card" onclick="openDeckModal('${d.id}')">
+      <!-- IMAGE HEADER -->
+      <div style="position:relative;height:190px;overflow:hidden;${tc(d.type).grad ? 'background:'+tc(d.type).grad : 'background:'+tc(d.type).bg};">
+        <img src="${imgUrl}" alt="${d.name}"
+          style="position:absolute;${isTCG
+            ? 'height:100%;right:-10%;top:0;object-fit:cover;'
+            : 'bottom:-10px;left:50%;transform:translateX(-50%);height:190px;object-fit:contain;filter:drop-shadow(0 4px 20px rgba(0,0,0,0.7));'}"
+          onerror="this.style.display='none'">
+        <!-- Glow -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(transparent,${tc(d.type).bg});pointer-events:none;"></div>
+        <!-- Tier badge -->
+        <div style="position:absolute;top:10px;right:10px;padding:4px 12px;border-radius:20px;font-size:0.78rem;font-weight:800;background:${tierBg[d.tier]};color:${d.tier==='S'||d.tier==='B'?'#1a1a2e':'white'};box-shadow:0 2px 10px rgba(0,0,0,0.5);">
+          ★ Tier ${d.tier}
+        </div>
+        <!-- Type badge -->
+        <div style="position:absolute;top:10px;left:10px;padding:3px 10px;border-radius:14px;font-size:0.72rem;font-weight:700;background:rgba(0,0,0,0.6);border:1px solid ${tc(d.type).border};color:${tc(d.type).text};">
+          ${tc(d.type).icon} ${tc(d.type).label}
+        </div>
+      </div>
+      <!-- CARD BODY -->
+      <div style="padding:14px 16px;">
+        <div style="font-size:1rem;font-weight:800;margin-bottom:2px;line-height:1.2;">${d.name}</div>
+        <div style="font-size:0.75rem;color:${tc(d.type).text};margin-bottom:10px;">${d.subname}</div>
+        <div style="font-size:0.82rem;color:var(--muted);line-height:1.4;margin-bottom:10px;min-height:48px;">${d.strategy.length>85?d.strategy.slice(0,85)+'…':d.strategy}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">${d.tags.map(t=>`<span style="padding:2px 8px;border-radius:10px;font-size:0.7rem;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);">${t}</span>`).join('')}</div>
+        <div style="display:flex;gap:10px;font-size:0.77rem;color:var(--muted);margin-bottom:8px;">
+          <span>🎯 <strong style="color:${tierWinColor[d.tier]}">${d.winRate}%</strong></span>
+          <span>⚔️ ${d.difficulty}</span>
+          <span>💰 ${d.budget}</span>
+        </div>
+        <div style="height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin-bottom:12px;">
+          <div style="height:100%;width:${d.winRate}%;background:${tierWinColor[d.tier]};border-radius:3px;transition:width 0.8s;"></div>
+        </div>
+        <button class="deck-view-btn" style="width:100%;padding:9px;border-radius:8px;border:1px solid ${tc(d.type).border};background:rgba(255,255,255,0.05);color:${tc(d.type).text};cursor:pointer;font-family:'Sarabun',sans-serif;font-size:0.85rem;font-weight:600;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+          📋 ดูเด็คลิสต์ 60 ใบ
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let _activeDeckTab = 'list';
+function switchDeckTab(t) {
+  _activeDeckTab = t;
+  ['list','visual'].forEach(n => {
+    document.getElementById('dtab-'+n).classList.toggle('active', n===t);
+    document.getElementById('dpanel-'+n).style.display = n===t ? '' : 'none';
+  });
+}
+
+function openDeckModal(id) {
+  const d = decks.find(x => x.id === id);
+  if(!d) return;
+  const tc = typeColors[d.type];
+  const imgUrl = deckImages[d.id] || '';
+  const isTCG = imgUrl.includes('tcgv2-r2');
+  const yt = deckYoutube[d.id] || {};
+  _activeDeckTab = 'visual'; // default to card image view
+
+  const renderSection = (title, arr) => `
+    <div class="decklist-section">
+      <h4>${title} <span style="font-weight:400;color:var(--muted);">(${arr.reduce((s,c)=>s+c.qty,0)})</span></h4>
+      ${arr.map(c=>`<div class="decklist-item"><span>${c.name}</span><span style="color:var(--secondary);font-weight:700;flex-shrink:0;">×${c.qty}</span></div>`).join('')}
+    </div>`;
+
+  // Build visual card grid with real image loading
+  const { html: visualGrid, entries: cardEntries } = buildDeckVisual(d.decklist);
+
+  document.getElementById('deckModalContent').innerHTML = `
+    <!-- HEADER -->
+    <div style="position:relative;height:150px;border-radius:10px;overflow:hidden;margin-bottom:14px;${tc.grad?'background:'+tc.grad:'background:'+tc.bg};">
+      <img src="${imgUrl}" alt="${d.name}"
+        style="position:absolute;${isTCG?'height:100%;right:0;top:0;object-fit:cover;':'bottom:-5px;right:10px;height:155px;object-fit:contain;filter:drop-shadow(0 4px 24px rgba(0,0,0,0.8));'}"
+        onerror="this.style.display='none'">
+      <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,0.88) 45%,transparent 85%);"></div>
+      <div style="position:absolute;top:12px;left:14px;">
+        <div style="font-size:0.72rem;color:${tc.text};font-weight:700;margin-bottom:3px;">${tc.icon} ${tc.label}</div>
+        <div style="font-size:1.2rem;font-weight:800;line-height:1.2;">${d.name}</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${d.subname}</div>
+      </div>
+      <div style="position:absolute;top:12px;right:12px;padding:3px 12px;border-radius:20px;font-size:0.77rem;font-weight:800;background:${tierBg[d.tier]};color:${d.tier==='S'||d.tier==='B'?'#1a1a2e':'white'};">★ Tier ${d.tier}</div>
+    </div>
+    <!-- STATS -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;">
+      ${[['🎯','ชนะ',d.winRate+'%'],['⚔️','ระดับ',d.difficulty],['💰','งบ',d.budget],['⚡','พลังงาน',d.energy]].map(([ic,lb,val])=>`
+        <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:7px;text-align:center;">
+          <div style="font-size:0.9rem;">${ic}</div>
+          <div style="font-size:0.6rem;color:var(--muted);margin:1px 0;">${lb}</div>
+          <div style="font-size:0.78rem;font-weight:700;color:${tc.text};">${val}</div>
+        </div>`).join('')}
+    </div>
+    <!-- STRATEGY -->
+    <div style="background:rgba(255,255,255,0.04);border-left:3px solid ${tc.border};border-radius:0 8px 8px 0;padding:9px 13px;margin-bottom:12px;font-size:0.83rem;line-height:1.6;">${d.strategy}</div>
+    <!-- KEY CARDS -->
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;">
+      ${d.keyCards.map(k=>`<span style="padding:2px 9px;border-radius:16px;font-size:0.75rem;background:rgba(255,203,5,0.1);border:1px solid rgba(255,203,5,0.3);color:var(--secondary);">★ ${k}</span>`).join('')}
+    </div>
+    <!-- DECKLIST TABS -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;">
+      <button id="dtab-visual" onclick="switchDeckTab('visual')" class="active" style="flex:1;padding:8px;border-radius:8px;border:1px solid ${tc.border};background:${tc.bg};color:${tc.text};cursor:pointer;font-family:'Sarabun',sans-serif;font-size:0.83rem;font-weight:700;transition:all 0.2s;">🖼️ รูปการ์ดทุกใบ</button>
+      <button id="dtab-list" onclick="switchDeckTab('list')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--card-border);background:rgba(255,255,255,0.04);color:var(--muted);cursor:pointer;font-family:'Sarabun',sans-serif;font-size:0.83rem;font-weight:700;transition:all 0.2s;">📋 ลิสต์ตัวอักษร</button>
+    </div>
+    <div id="dpanel-visual">${visualGrid}</div>
+    <div id="dpanel-list" style="display:none;">
+      <div class="decklist-grid">
+        ${renderSection('🐾 โปเกมอน', d.decklist.pokemon)}
+        <div>
+          ${renderSection('🃏 เทรนเนอร์', d.decklist.trainer)}
+          ${renderSection('⚡ พลังงาน', d.decklist.energy)}
+        </div>
+      </div>
+    </div>
+    <!-- YOUTUBE SECTION -->
+    <div style="margin-top:18px;padding:14px;background:rgba(255,0,0,0.06);border:1px solid rgba(255,80,80,0.25);border-radius:10px;">
+      <div style="font-size:0.85rem;font-weight:700;margin-bottom:10px;color:#ff6b6b;">🎬 ดูวิดีโอเล่นเด็คนี้ภาษาไทย</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <a href="${yt.url || '#'}" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;background:#cc0000;color:white;text-decoration:none;font-size:0.8rem;font-weight:700;">
+          ▶ ค้นหา "${d.name.split(' ').slice(0,2).join(' ')}" บน YouTube
+        </a>
+        <a href="https://www.youtube.com/@PokemonThailandOfficial" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:var(--text);text-decoration:none;font-size:0.8rem;">
+          🎴 Pokémon Thailand Official
+        </a>
+        <a href="${yt.blog || 'https://www.tcgthailand.com/blog'}" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;background:rgba(255,203,5,0.1);border:1px solid rgba(255,203,5,0.3);color:var(--secondary);text-decoration:none;font-size:0.8rem;">
+          📝 TCGThailand บทความเด็ค
+        </a>
+      </div>
+    </div>`;
+
+  document.getElementById('deckModal').style.display = 'block';
+  // Set global zoom deck for carousel lightbox
+  zoomDeck = cardEntries;
+  zoomCurIdx = 0;
+  // Start loading real card images asynchronously (non-blocking)
+  loadCardImages(cardEntries);
+}
+
+function closeDeckModal() {
+  document.getElementById('deckModal').style.display = 'none';
+}
+
+// TAB
+let priceTabLoaded = false;
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  event.target.classList.add('active');
+  if (tab === 'sales') renderSalesCharts();
+  if (tab === 'compare') { renderPlatforms(); renderBoxPrices(); renderSingleCompare(); }
+  if (tab === 'decks') renderDecks();
+  if (tab === 'prices' && !priceTabLoaded) { priceTabLoaded = true; fetchLivePrices(); }
+}
+
+// TOP SELLERS
+function renderTopSellers() {
+  const rankClasses = ['gold','silver','bronze'];
+  document.getElementById('topSellersList').innerHTML = topSellers.map((s,i) => `
+    <div class="seller-item">
+      <div class="seller-rank ${rankClasses[i]||''}">${i<3?['🥇','🥈','🥉'][i]:i+1}</div>
+      <div class="seller-info">
+        <div class="seller-name">${s.name}</div>
+        <div class="seller-set">${s.set}</div>
+      </div>
+      <div class="seller-bar-wrap">
+        <div class="seller-bar-bg"><div class="seller-bar" style="width:${Math.round(s.sold/s.max*100)}%"></div></div>
+      </div>
+      <div class="seller-sold">${s.sold} ใบ</div>
+    </div>
+  `).join('');
+}
+
+// CHARTS
+let chartsRendered = false;
+function renderSalesCharts() {
+  if (chartsRendered) return;
+  chartsRendered = true;
+
+  // Sales Bar Chart
+  new Chart(document.getElementById('salesChart'), {
+    type: 'bar',
+    data: {
+      labels: topSellers.slice(0,8).map(s => s.name.replace(' SAR','').replace(' SR','').replace(' UR','')),
+      datasets: [{ label: 'ยอดขาย (ใบ)', data: topSellers.slice(0,8).map(s=>s.sold),
+        backgroundColor: ['#E3350D','#FFCB05','#e74c3c','#3498db','#9b59b6','#27ae60','#e67e22','#1abc9c'],
+        borderRadius: 6 }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}},
+      scales:{ x:{ticks:{color:'#888',font:{size:10}}}, y:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.05)'}} } }
+  });
+
+  // Rarity Price Chart
+  const rarityGroups = {};
+  cards.forEach(c => { if(!rarityGroups[c.rarity]) rarityGroups[c.rarity]=[]; rarityGroups[c.rarity].push(c.price); });
+  const rarityOrder = ['UR','SAR','SR','AR','RR','R'];
+  const rarityAvg = rarityOrder.map(r => rarityGroups[r] ? Math.round(rarityGroups[r].reduce((a,b)=>a+b,0)/rarityGroups[r].length) : 0);
+  new Chart(document.getElementById('rarityPriceChart'), {
+    type: 'bar',
+    data: {
+      labels: rarityOrder,
+      datasets: [{ label: 'ราคาเฉลี่ย (฿)', data: rarityAvg,
+        backgroundColor: ['#f0abfc','#67e8f9','#c084fc','#86efac','#fbbf24','#f87171'],
+        borderRadius: 6 }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}},
+      scales:{ x:{ticks:{color:'#888'}}, y:{ticks:{color:'#888',callback:v=>'฿'+v.toLocaleString()},grid:{color:'rgba(255,255,255,0.05)'}} } }
+  });
+
+  // Trend Chart (เมก้าดาร์กไรex MUR price 6 months estimated)
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.'],
+      datasets: [{
+        label: 'เมก้าดาร์กไรex MUR (฿)',
+        data: [6200, 7100, 7800, 8200, 8700, 9050],
+        borderColor: '#9b59b6', backgroundColor: 'rgba(155,89,182,0.15)',
+        fill: true, tension: 0.4, pointBackgroundColor: '#FFCB05', pointRadius: 5
+      },{
+        label: 'เมก้าเก็คโคกะex SAR (฿)',
+        data: [3500, 3800, 4100, 4400, 4700, 5000],
+        borderColor: '#3498db', backgroundColor: 'rgba(52,152,219,0.1)',
+        fill: false, tension: 0.4, pointBackgroundColor: '#67e8f9', pointRadius: 4
+      }]
+    },
+    options: { responsive:true, plugins:{legend:{labels:{color:'#ccc'}}},
+      scales:{ x:{ticks:{color:'#888'}}, y:{ticks:{color:'#888',callback:v=>'฿'+v.toLocaleString()},grid:{color:'rgba(255,255,255,0.05)'}} } }
+  });
+
+  // Type Donut Chart
+  const typeCount = {};
+  cards.forEach(c => { typeCount[c.type] = (typeCount[c.type]||0) + c.sold; });
+  const typeEntries = Object.entries(typeCount).sort((a,b)=>b[1]-a[1]);
+  const typeColors = { fire:'#e74c3c', water:'#3498db', psychic:'#9b59b6', electric:'#f1c40f', dark:'#2c3e50', colorless:'#95a5a6', dragon:'#1a5276', steel:'#7f8c8d', grass:'#27ae60', fighting:'#a04000' };
+  const typeLabels2 = { fire:'🔥 ไฟ', water:'💧 น้ำ', psychic:'🔮 จิต', electric:'⚡ ไฟฟ้า', dark:'🌑 มืด', colorless:'◯ ไม่มีสี', dragon:'🐉 มังกร', steel:'⚙️ เหล็ก', grass:'🌿 หญ้า', fighting:'🥊 ต่อสู้' };
+  new Chart(document.getElementById('typeChart'), {
+    type: 'doughnut',
+    data: {
+      labels: typeEntries.map(([t]) => typeLabels2[t]||t),
+      datasets: [{ data: typeEntries.map(([,v])=>v),
+        backgroundColor: typeEntries.map(([t]) => typeColors[t]||'#aaa'),
+        borderWidth: 2, borderColor: '#16213e' }]
+    },
+    options: { responsive:true, plugins:{legend:{labels:{color:'#ccc',font:{size:11}},position:'bottom'}} }
+  });
+}
+
+// =====================================================================
+// LOAD PRICES FROM prices.json (GitHub Pages / local server)
+// ถ้าโหลดไม่ได้ (เปิดจาก file://) จะใช้ราคาที่ฝังอยู่ในไฟล์แทน
+// =====================================================================
+async function loadPricesJSON() {
+  try {
+    const res = await fetch('./prices.json', { cache: 'no-cache' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    let updated = 0;
+    data.forEach(p => {
+      const card = cards.find(c => c.id === p.id);
+      if (card && p.price > 0) {
+        card.price = p.price;
+        if (p.trend) card.trend = p.trend;
+        updated++;
+      }
+    });
+    if (updated > 0) {
+      filteredCards = [...cards];
+      renderTable(filteredCards);
+      // แสดง badge "อัพเดทแล้ว"
+      const ts = data[0]?.updatedAt || '';
+      const badge = document.createElement('div');
+      badge.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;background:#0f2a1a;border:1px solid #2ecc71;color:#2ecc71;padding:8px 14px;border-radius:8px;font-size:0.78rem;font-family:Sarabun,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
+      badge.textContent = '✅ ราคาอัพเดทแล้ว ' + (ts ? '(' + ts + ')' : '');
+      document.body.appendChild(badge);
+      setTimeout(() => badge.remove(), 4000);
+    }
+  } catch (e) {
+    // เปิดจาก file:// หรือไม่มี prices.json — ใช้ราคาฝังตัวต่อไป
+    console.log('prices.json not found — using built-in prices');
+  }
+}
+
+// INIT
+renderTable(filteredCards);
+renderTopSellers();
+renderAuctions();
+loadPricesJSON();
+// Auto-fetch live USD prices on load (prices tab is default)
+priceTabLoaded = true;
+fetchLivePrices();
+
+// =====================================================================
+// COLLECTION TRACKER
+// =====================================================================
+
+const COLL_KEY = 'pkmnCollection_v1';
+
+function loadCollection() {
+  try { return JSON.parse(localStorage.getItem(COLL_KEY)) || []; }
+  catch { return []; }
+}
+function saveCollection(col) {
+  localStorage.setItem(COLL_KEY, JSON.stringify(col));
+}
+
+const condMultiplier = { NM:1, LP:0.85, MP:0.7, HP:0.5, DM:0.3 };
+
+function lookupPrice(name) {
+  const c = cards.find(x => x.name === name || x.nameTh === name);
+  return c ? c.price : null;
+}
+
+function collSearchCards(q) {
+  const dd = document.getElementById('collDropdown');
+  if (!q || q.length < 1) { dd.style.display = 'none'; return; }
+  const ql = q.toLowerCase();
+  const hits = cards.filter(c => c.name.toLowerCase().includes(ql) || (c.nameTh||'').includes(q)).slice(0, 8);
+  if (!hits.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = hits.map(c => `
+    <div onclick="collSelectCard('${c.name.replace(/'/g,"\\'")}',${c.price})"
+      style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.82rem;display:flex;justify-content:space-between;align-items:center;"
+      onmouseover="this.style.background='rgba(255,203,5,0.1)'" onmouseout="this.style.background=''">
+      <span>${c.name}</span>
+      <span style="color:var(--secondary);font-size:0.75rem;">฿${c.price.toLocaleString()}</span>
+    </div>`).join('');
+  dd.style.display = 'block';
+}
+
+function collSelectCard(name, price) {
+  document.getElementById('collAddName').value = name;
+  document.getElementById('collAddBuy').value = price;
+  closeCollDropdown();
+}
+
+function closeCollDropdown() {
+  const dd = document.getElementById('collDropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#collAddName') && !e.target.closest('#collDropdown')) closeCollDropdown();
+});
+
+function collAddCard() {
+  const name     = document.getElementById('collAddName').value.trim();
+  const qty      = parseInt(document.getElementById('collAddQty').value) || 1;
+  const cond     = document.getElementById('collAddCond').value;
+  const buyPrice = parseFloat(document.getElementById('collAddBuy').value) || 0;
+  if (!name) { alert('กรุณาระบุชื่อการ์ด'); return; }
+  const col = loadCollection();
+  const existing = col.find(x => x.name === name && x.cond === cond && x.buyPrice === buyPrice);
+  if (existing) { existing.qty += qty; }
+  else { col.push({ id: Date.now(), name, qty, cond, buyPrice, addedAt: Date.now() }); }
+  saveCollection(col);
+  renderCollection();
+  document.getElementById('collAddName').value = '';
+  document.getElementById('collAddBuy').value  = '';
+  document.getElementById('collAddQty').value  = '1';
+}
+
+function collRemove(id) {
+  saveCollection(loadCollection().filter(x => x.id !== id));
+  renderCollection();
+}
+
+function collUpdateQty(id, delta) {
+  const col = loadCollection();
+  const item = col.find(x => x.id === id);
+  if (!item) return;
+  item.qty = Math.max(1, item.qty + delta);
+  saveCollection(col);
+  renderCollection();
+}
+
+function clearCollection() {
+  if (!confirm('ล้างคอลเล็กชันทั้งหมด?')) return;
+  saveCollection([]);
+  renderCollection();
+}
+
+function renderCollection() {
+  const col = loadCollection();
+  const tbody = document.getElementById('collTableBody');
+  if (!tbody) return;
+
+  if (!col.length) {
+    tbody.innerHTML = `<tr id="collEmpty"><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">ยังไม่มีการ์ดในคอลเล็กชัน<br><span style="font-size:0.78rem;">เพิ่มการ์ดด้านบนเพื่อเริ่มต้น</span></td></tr>`;
+    document.getElementById('cStat1').textContent = '0';
+    document.getElementById('cStat2').textContent = '฿0';
+    document.getElementById('cStat3').textContent = '฿0';
+    document.getElementById('cStat4').textContent = '฿0';
+    return;
+  }
+
+  let totalCards = 0, totalMarket = 0, totalCost = 0;
+  const condColors = { NM:'#2ecc71', LP:'#f1c40f', MP:'#e67e22', HP:'#e74c3c', DM:'#95a5a6' };
+
+  tbody.innerHTML = col.map(item => {
+    const mktUnit  = lookupPrice(item.name);
+    const mktAdj   = mktUnit != null ? Math.round(mktUnit * (condMultiplier[item.cond] || 1)) : null;
+    const mktTotal = mktAdj != null ? mktAdj * item.qty : null;
+    const costTotal = item.buyPrice * item.qty;
+    const pnl = mktTotal != null ? mktTotal - costTotal : null;
+    const pnlColor = pnl == null ? '#888' : pnl >= 0 ? '#2ecc71' : '#e74c3c';
+    const pnlText  = pnl == null ? '–' : (pnl >= 0 ? '+' : '') + '฿' + Math.abs(pnl).toLocaleString();
+    totalCards += item.qty;
+    if (mktTotal != null) totalMarket += mktTotal;
+    totalCost += costTotal;
+    const sellQ = encodeURIComponent(item.name + ' โปเกมอนการ์ด');
+    return `
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.04);" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background=''">
+      <td style="padding:10px 12px;">
+        <div style="font-weight:600;font-size:0.85rem;">${item.name}</div>
+        <div style="font-size:0.7rem;color:var(--muted);">${mktUnit != null ? '฿'+mktUnit.toLocaleString()+' (ตลาด)' : 'ไม่พบราคา'}</div>
+      </td>
+      <td style="padding:10px 8px;text-align:center;">
+        <div style="display:inline-flex;align-items:center;gap:4px;">
+          <button onclick="collUpdateQty(${item.id},-1)" style="background:rgba(255,255,255,0.08);border:none;color:#ccc;width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:1rem;line-height:1;">−</button>
+          <span style="font-weight:700;min-width:24px;text-align:center;">${item.qty}</span>
+          <button onclick="collUpdateQty(${item.id},1)" style="background:rgba(255,255,255,0.08);border:none;color:#ccc;width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:1rem;line-height:1;">+</button>
+        </div>
+      </td>
+      <td style="padding:10px 8px;text-align:center;">
+        <span style="background:${condColors[item.cond]}22;color:${condColors[item.cond]};border:1px solid ${condColors[item.cond]}44;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:700;">${item.cond}</span>
+      </td>
+      <td style="padding:10px 8px;text-align:right;color:var(--muted);font-size:0.83rem;">฿${costTotal.toLocaleString()}<br><span style="font-size:0.65rem;">(฿${item.buyPrice.toLocaleString()}/ใบ)</span></td>
+      <td style="padding:10px 8px;text-align:right;font-size:0.83rem;">${mktAdj != null ? '฿'+mktAdj.toLocaleString()+'<br><span style="font-size:0.65rem;color:var(--muted);">ต่อใบ</span>' : '<span style="color:var(--muted);">–</span>'}</td>
+      <td style="padding:10px 8px;text-align:right;font-weight:700;font-size:0.88rem;">${mktTotal != null ? '฿'+mktTotal.toLocaleString() : '<span style="color:var(--muted);">–</span>'}</td>
+      <td style="padding:10px 8px;text-align:right;font-weight:700;color:${pnlColor};">${pnlText}</td>
+      <td style="padding:10px 8px;text-align:center;">
+        <div style="display:flex;gap:4px;justify-content:center;">
+          <a href="https://shopee.co.th/search?keyword=${sellQ}" target="_blank" rel="noopener"
+            style="display:inline-block;padding:3px 7px;background:rgba(238,77,45,0.15);border:1px solid rgba(238,77,45,0.35);color:#ff6740;border-radius:5px;font-size:0.68rem;text-decoration:none;white-space:nowrap;">🛒 ขาย</a>
+          <button onclick="collRemove(${item.id})"
+            style="padding:3px 7px;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.25);color:#e74c3c;border-radius:5px;font-size:0.68rem;cursor:pointer;font-family:Sarabun,sans-serif;">✕</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const pnl = totalMarket - totalCost;
+  document.getElementById('cStat1').textContent = totalCards;
+  document.getElementById('cStat2').textContent = '฿' + Math.round(totalMarket).toLocaleString();
+  document.getElementById('cStat3').textContent = '฿' + Math.round(totalCost).toLocaleString();
+  document.getElementById('cStat4').textContent = (pnl >= 0 ? '+' : '') + '฿' + Math.round(Math.abs(pnl)).toLocaleString();
+  document.getElementById('cStat4').style.color = pnl >= 0 ? '#2ecc71' : '#e74c3c';
+  document.getElementById('cStatIcon4').textContent = pnl >= 0 ? '📈' : '📉';
+}
+
+function exportCollectionCSV() {
+  const col = loadCollection();
+  if (!col.length) { alert('ยังไม่มีข้อมูล'); return; }
+  const rows = [['ชื่อการ์ด','จำนวน','สภาพ','ราคาทุน/ใบ','ราคาทุนรวม','ราคาตลาด/ใบ','ราคาตลาดรวม','กำไร/ขาดทุน']];
+  col.forEach(item => {
+    const mkt = lookupPrice(item.name);
+    const mktAdj = mkt != null ? Math.round(mkt * (condMultiplier[item.cond]||1)) : '';
+    const mktTot = mktAdj !== '' ? mktAdj * item.qty : '';
+    const pnl = mktTot !== '' ? mktTot - item.buyPrice * item.qty : '';
+    rows.push([item.name, item.qty, item.cond, item.buyPrice, item.buyPrice*item.qty, mktAdj, mktTot, pnl]);
+  });
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob(['﻿'+csv], { type:'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pokemon_collection_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+// =====================================================================
+// TRADE CALCULATOR
+// =====================================================================
+
+let tradeMy    = [];
+let tradeTheir = [];
+let tradeHistoryLog = [];
+
+function tradeSearch(side, q) {
+  const ddId = side === 'my' ? 'tradeMeDropdown' : 'tradeTheirDropdown';
+  const dd = document.getElementById(ddId);
+  if (!q || q.length < 1) { dd.style.display = 'none'; return; }
+  const ql = q.toLowerCase();
+  const hits = cards.filter(c => c.name.toLowerCase().includes(ql) || (c.nameTh||'').includes(q)).slice(0, 8);
+  if (!hits.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = hits.map(c => `
+    <div onclick="tradeSelectCard('${side}','${c.name.replace(/'/g,"\\'")}',${c.price})"
+      style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.82rem;display:flex;justify-content:space-between;"
+      onmouseover="this.style.background='rgba(255,203,5,0.08)'" onmouseout="this.style.background=''">
+      <span>${c.name}</span><span style="color:var(--secondary);font-size:0.75rem;">฿${c.price.toLocaleString()}</span>
+    </div>`).join('');
+  dd.style.display = 'block';
+}
+
+function tradeSelectCard(side, name, price) {
+  if (side === 'my') {
+    document.getElementById('tradeMeName').value  = name;
+    document.getElementById('tradeMePrice').value = price;
+    closeTradeDropdown('my');
+  } else {
+    document.getElementById('tradeTheirName').value  = name;
+    document.getElementById('tradeTheirPrice').value = price;
+    closeTradeDropdown('their');
+  }
+}
+
+function closeTradeDropdown(side) {
+  const dd = document.getElementById(side === 'my' ? 'tradeMeDropdown' : 'tradeTheirDropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#tradeMeName')    && !e.target.closest('#tradeMeDropdown'))    closeTradeDropdown('my');
+  if (!e.target.closest('#tradeTheirName') && !e.target.closest('#tradeTheirDropdown')) closeTradeDropdown('their');
+});
+
+function tradeAddCard(side) {
+  const nameId  = side === 'my' ? 'tradeMeName'  : 'tradeTheirName';
+  const qtyId   = side === 'my' ? 'tradeMeQty'   : 'tradeTheirQty';
+  const priceId = side === 'my' ? 'tradeMePrice' : 'tradeTheirPrice';
+  const name  = document.getElementById(nameId).value.trim();
+  const qty   = parseInt(document.getElementById(qtyId).value) || 1;
+  const price = parseFloat(document.getElementById(priceId).value) || 0;
+  if (!name) { alert('กรุณาระบุชื่อการ์ด'); return; }
+  (side === 'my' ? tradeMy : tradeTheir).push({ name, qty, price });
+  document.getElementById(nameId).value  = '';
+  document.getElementById(priceId).value = '';
+  document.getElementById(qtyId).value   = '1';
+  renderTrade();
+}
+
+function tradeRemove(side, idx) {
+  if (side === 'my') tradeMy.splice(idx, 1);
+  else tradeTheir.splice(idx, 1);
+  renderTrade();
+}
+
+function resetTrade() { tradeMy = []; tradeTheir = []; renderTrade(); }
+
+function tradeTotal(list) { return list.reduce((s, x) => s + x.price * x.qty, 0); }
+
+function renderTradeList(el, list, side) {
+  if (!list.length) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:0.78rem;padding:10px 0;">ยังไม่มีการ์ด</div>`;
+    return;
+  }
+  el.innerHTML = list.map((item, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+      <div style="flex:1;font-size:0.82rem;">${item.name}<span style="color:var(--muted);margin-left:4px;">×${item.qty}</span></div>
+      <div style="color:var(--secondary);font-size:0.82rem;font-weight:700;white-space:nowrap;">฿${(item.price*item.qty).toLocaleString()}</div>
+      <button onclick="tradeRemove('${side}',${i})" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:1rem;padding:0 4px;line-height:1;">✕</button>
+    </div>`).join('');
+}
+
+function renderTrade() {
+  const myTotal    = tradeTotal(tradeMy);
+  const theirTotal = tradeTotal(tradeTheir);
+  const diff = myTotal - theirTotal;
+  const base = Math.max(myTotal, theirTotal, 1);
+  const pct  = Math.abs(diff) / base * 100;
+
+  document.getElementById('tradeMyTotal').textContent    = '฿' + myTotal.toLocaleString();
+  document.getElementById('tradeTheirTotal').textContent = '฿' + theirTotal.toLocaleString();
+
+  renderTradeList(document.getElementById('tradeMyList'),    tradeMy,    'my');
+  renderTradeList(document.getElementById('tradeTheirList'), tradeTheir, 'their');
+
+  const el = document.getElementById('tradeVerdict');
+  if (!tradeMy.length && !tradeTheir.length) {
+    el.style.background = 'rgba(255,255,255,0.04)';
+    el.style.borderColor = 'rgba(255,255,255,0.08)';
+    el.innerHTML = `<div style="font-size:1.1rem;font-weight:700;color:var(--muted);">เพิ่มการ์ดเพื่อประเมินดีล</div><div style="font-size:0.78rem;color:var(--muted);margin-top:4px;">ระบบจะบอกว่าคุ้มหรือควรต่อรองเพิ่ม</div>`;
+    return;
+  }
+
+  let icon, title, subtitle, bg, border;
+  if (pct <= 5) {
+    icon='✅'; title='ดีลยุติธรรม!'; subtitle=`ต่างกัน ${pct.toFixed(1)}% — อยู่ในช่วงยอมรับได้`;
+    bg='rgba(46,204,113,0.1)'; border='rgba(46,204,113,0.4)';
+  } else if (diff > 0) {
+    icon='⚠️'; title=`คุณได้น้อยกว่า ฿${Math.abs(diff).toLocaleString()}`; subtitle=`ฝั่งคู่ได้ประโยชน์กว่า ${pct.toFixed(0)}% — ลองต่อรองเพิ่ม`;
+    bg='rgba(231,76,60,0.1)'; border='rgba(231,76,60,0.4)';
+  } else if (diff < 0) {
+    icon='🎯'; title=`คุณได้มากกว่า ฿${Math.abs(diff).toLocaleString()}`; subtitle=`คุณได้ประโยชน์ ${pct.toFixed(0)}%`;
+    bg='rgba(52,152,219,0.1)'; border='rgba(52,152,219,0.4)';
+  } else {
+    icon='🤝'; title='เสมอกันพอดี!'; subtitle='มูลค่าทั้งสองฝั่งเท่ากัน';
+    bg='rgba(255,203,5,0.1)'; border='rgba(255,203,5,0.4)';
+  }
+
+  el.style.background = bg; el.style.borderColor = border;
+  el.innerHTML = `
+    <div style="font-size:1.5rem;margin-bottom:4px;">${icon}</div>
+    <div style="font-size:1.1rem;font-weight:700;">${title}</div>
+    <div style="font-size:0.82rem;color:var(--muted);margin-top:4px;">${subtitle}</div>
+    <div style="display:flex;gap:24px;justify-content:center;margin-top:10px;font-size:0.85rem;">
+      <span>🙋 ฉัน: <b style="color:#2ecc71;">฿${myTotal.toLocaleString()}</b></span>
+      <span>🤝 คู่: <b style="color:#3498db;">฿${theirTotal.toLocaleString()}</b></span>
+    </div>`;
+}
+
+function saveTradeHistory() {
+  if (!tradeMy.length && !tradeTheir.length) { alert('ยังไม่มีข้อมูลดีล'); return; }
+  const myTotal = tradeTotal(tradeMy), theirTotal = tradeTotal(tradeTheir);
+  const diff = theirTotal - myTotal;
+  const base = Math.max(myTotal, theirTotal, 1);
+  tradeHistoryLog.push({ time: new Date().toLocaleString('th-TH'), myTotal, theirTotal, diff });
+  const histEl = document.getElementById('tradeHistory');
+  histEl.innerHTML = tradeHistoryLog.slice().reverse().map(h => {
+    const pct2 = Math.abs(h.diff)/base*100;
+    const verdict = pct2 <= 5 ? '✅ ยุติธรรม' : h.diff > 0 ? '🎯 ฉันได้กำไร' : '⚠️ ฉันเสียเปรียบ';
+    return `<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.78rem;">
+      <span style="color:var(--muted);">${h.time}</span>
+      <span style="margin-left:8px;">ฉัน ฿${h.myTotal.toLocaleString()} ↔ คู่ ฿${h.theirTotal.toLocaleString()}</span>
+      <span style="margin-left:8px;">${verdict}</span>
+    </div>`;
+  }).join('');
+}
+
+// Hook new tabs into switchTab
+const _origSwitch = switchTab;
+switchTab = function(tab) {
+  _origSwitch(tab);
+  if (tab === 'collection') renderCollection();
+  if (tab === 'trade') renderTrade();
+};
+</script>
+</body>
+</html>
