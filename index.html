@@ -1066,7 +1066,7 @@
 
       <!-- Card Name Search -->
       <div style="flex:1;min-width:200px;position:relative;">
-        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px;">ชื่อการ์ด</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px;">ชื่อการ์ด <span style="color:#666;font-weight:400;">(พิมพ์ชื่อใดก็ได้)</span></div>
         <input id="collAddName" type="text" placeholder="พิมพ์ชื่อการ์ด..." autocomplete="off"
           style="width:100%;padding:9px 12px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.9rem;"
           oninput="collSearchCards(this.value)" onkeydown="if(event.key==='Escape')closeCollDropdown()">
@@ -1096,6 +1096,13 @@
       <div style="width:130px;">
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px;">ราคาที่ซื้อมา (฿)</div>
         <input id="collAddBuy" type="number" placeholder="0" min="0"
+          style="width:100%;padding:9px 12px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.9rem;">
+      </div>
+
+      <!-- Market Price (manual) -->
+      <div style="width:130px;">
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:4px;">ราคาตลาด (฿) <span style="color:#666;">ถ้าไม่มีในระบบ</span></div>
+        <input id="collAddMarket" type="number" placeholder="ไม่บังคับ" min="0"
           style="width:100%;padding:9px 12px;background:#0d1117;border:1.5px solid var(--card-border);border-radius:8px;color:var(--text);font-family:Sarabun,sans-serif;font-size:0.9rem;">
       </div>
 
@@ -3239,6 +3246,7 @@ function collSearchCards(q) {
 function collSelectCard(name, price) {
   document.getElementById('collAddName').value = name;
   document.getElementById('collAddBuy').value = price;
+  document.getElementById('collAddMarket').value = price;
   closeCollDropdown();
 }
 
@@ -3252,20 +3260,22 @@ document.addEventListener('click', e => {
 });
 
 function collAddCard() {
-  const name     = document.getElementById('collAddName').value.trim();
-  const qty      = parseInt(document.getElementById('collAddQty').value) || 1;
-  const cond     = document.getElementById('collAddCond').value;
-  const buyPrice = parseFloat(document.getElementById('collAddBuy').value) || 0;
+  const name        = document.getElementById('collAddName').value.trim();
+  const qty         = parseInt(document.getElementById('collAddQty').value) || 1;
+  const cond        = document.getElementById('collAddCond').value;
+  const buyPrice    = parseFloat(document.getElementById('collAddBuy').value) || 0;
+  const manualMkt   = parseFloat(document.getElementById('collAddMarket').value) || null;
   if (!name) { alert('กรุณาระบุชื่อการ์ด'); return; }
   const col = loadCollection();
   const existing = col.find(x => x.name === name && x.cond === cond && x.buyPrice === buyPrice);
-  if (existing) { existing.qty += qty; }
-  else { col.push({ id: Date.now(), name, qty, cond, buyPrice, addedAt: Date.now() }); }
+  if (existing) { existing.qty += qty; if (manualMkt) existing.manualMarket = manualMkt; }
+  else { col.push({ id: Date.now(), name, qty, cond, buyPrice, manualMarket: manualMkt, addedAt: Date.now() }); }
   saveCollection(col);
   renderCollection();
-  document.getElementById('collAddName').value = '';
-  document.getElementById('collAddBuy').value  = '';
-  document.getElementById('collAddQty').value  = '1';
+  document.getElementById('collAddName').value   = '';
+  document.getElementById('collAddBuy').value    = '';
+  document.getElementById('collAddMarket').value = '';
+  document.getElementById('collAddQty').value    = '1';
 }
 
 function collRemove(id) {
@@ -3306,7 +3316,9 @@ function renderCollection() {
   const condColors = { NM:'#2ecc71', LP:'#f1c40f', MP:'#e67e22', HP:'#e74c3c', DM:'#95a5a6' };
 
   tbody.innerHTML = col.map(item => {
-    const mktUnit  = lookupPrice(item.name);
+    const dbPrice  = lookupPrice(item.name);
+    const mktUnit  = dbPrice != null ? dbPrice : (item.manualMarket || null);
+    const mktSrc   = dbPrice != null ? '(ตลาด)' : item.manualMarket ? '(กรอกเอง)' : null;
     const mktAdj   = mktUnit != null ? Math.round(mktUnit * (condMultiplier[item.cond] || 1)) : null;
     const mktTotal = mktAdj != null ? mktAdj * item.qty : null;
     const costTotal = item.buyPrice * item.qty;
@@ -3321,7 +3333,7 @@ function renderCollection() {
     <tr style="border-bottom:1px solid rgba(255,255,255,0.04);" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background=''">
       <td style="padding:10px 12px;">
         <div style="font-weight:600;font-size:0.85rem;">${item.name}</div>
-        <div style="font-size:0.7rem;color:var(--muted);">${mktUnit != null ? '฿'+mktUnit.toLocaleString()+' (ตลาด)' : 'ไม่พบราคา'}</div>
+        <div style="font-size:0.7rem;color:var(--muted);">${mktUnit != null ? '฿'+mktUnit.toLocaleString()+' '+mktSrc : '<span style="color:#e67e22;">ไม่พบราคา — กรอกในช่องราคาตลาด</span>'}</div>
       </td>
       <td style="padding:10px 8px;text-align:center;">
         <div style="display:inline-flex;align-items:center;gap:4px;">
