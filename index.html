@@ -1497,7 +1497,15 @@ function startCountdowns() {
 function renderAuctions() {
   // คำนวณ discount เทียบกับ fixedPrice และเรียงลำดับ
   const enriched = auctionCards.map(a => {
-    const ref = a.fixedPrice || a.marketPrice || lookupPrice(a.name) || 0;
+    // ลอง match ชื่อหลายรูปแบบ: ตรง → ชื่อ+(rarity) → ตัดรหัสrarity ออกจากชื่อแล้วใส่วงเล็บ
+    const _nameWithRarity  = a.name + ' (' + a.rarity + ')';
+    const _nameStripped    = a.name.replace(new RegExp('\\s+' + a.rarity + '$'), '');
+    const _nameStrippedR   = _nameStripped + ' (' + a.rarity + ')';
+    const ref = a.fixedPrice || a.marketPrice
+      || lookupPrice(a.name)
+      || lookupPrice(_nameWithRarity)
+      || lookupPrice(_nameStrippedR)
+      || 0;
     const disc = ref ? Math.round((1 - a.openPrice / ref) * 100) : 0;
     const isOverpriced = a.openPrice > ref && ref > 0;
     return { ...a, disc, isOverpriced, ref };
