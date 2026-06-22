@@ -1570,26 +1570,45 @@ function renderAuctions() {
 
     const countdown = a.endTime ? countdownBarHTML(a.endTime, cid) : '';
 
+    // แถบเปรียบเทียบราคา: ถูก/แพงกว่าตลาด
+    const compareBlock = (() => {
+      if (a.ref <= 0) return '<div style="text-align:center;font-size:0.68rem;color:#4b5563;padding:4px 0 2px;">— ไม่มีราคาตลาดเปรียบเทียบ</div>';
+      const ratio    = a.openPrice / a.ref;
+      const barPct   = Math.min(Math.round(ratio * 100), 130);
+      const savePct  = a.disc;
+      const diffBaht = Math.abs(a.ref - a.openPrice).toLocaleString();
+      if (a.isOverpriced) {
+        const overPct = Math.abs(savePct);
+        return `<div style="margin:5px 0;"><div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;"><div style="flex:1;background:#1f2937;border-radius:3px;height:8px;overflow:hidden;"><div style="height:100%;width:100%;background:rgba(239,68,68,0.25);border-radius:3px;"></div></div><span style="font-size:0.65rem;color:#ef4444;font-weight:700;">+${overPct}%</span></div><div style="text-align:center;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);border-radius:7px;padding:4px 8px;"><span style="font-size:0.73rem;font-weight:700;color:#ef4444;">🔴 แพงกว่าตลาด ฿${diffBaht} (+${overPct}%)</span></div></div>`;
+      }
+      const color = savePct >= 30 ? '#4ade80' : savePct >= 10 ? '#86efac' : '#fbbf24';
+      const bgCol = savePct >= 30 ? 'rgba(74,222,128,0.11)' : savePct >= 10 ? 'rgba(134,239,172,0.09)' : 'rgba(251,191,36,0.08)';
+      const bdCol = savePct >= 30 ? 'rgba(74,222,128,0.35)' : savePct >= 10 ? 'rgba(134,239,172,0.25)' : 'rgba(251,191,36,0.25)';
+      const emoji = savePct >= 30 ? '\uD83D\uDC9A' : savePct >= 10 ? '\uD83D\uDFE2' : '\uD83D\uDFE1';
+      const label = savePct > 0 ? emoji + ' ถูกกว่าตลาด ฿' + diffBaht + ' (-' + savePct + '%)' : '\u27A1\uFE0F ราคาเท่ากับตลาด';
+      const fillW = Math.min(barPct, 100);
+      return `<div style="margin:5px 0;"><div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;"><div style="flex:1;background:#1f2937;border-radius:3px;height:8px;overflow:hidden;"><div style="height:100%;width:${fillW}%;background:linear-gradient(90deg,${color}99,${color});border-radius:3px;"></div></div><span style="font-size:0.65rem;color:${color};font-weight:700;">${fillW}%</span></div><div style="text-align:center;background:${bgCol};border:1px solid ${bdCol};border-radius:7px;padding:4px 8px;"><span style="font-size:0.73rem;font-weight:700;color:${color};">${label}</span></div></div>`;
+    })();
+
     if (a.isOverpriced) {
       return `
         <div style="background:linear-gradient(135deg,#1a0e00,#221200);border:1.5px solid #d97706;border-radius:12px;padding:14px;position:relative;">
-          <div style="position:absolute;top:8px;right:8px;background:#d97706;color:#000;font-size:0.6rem;font-weight:800;padding:2px 7px;border-radius:10px;">⚠️ แพงกว่าตลาด +${Math.abs(a.disc)}%</div>
+          <div style="position:absolute;top:8px;right:8px;background:#d97706;color:#000;font-size:0.6rem;font-weight:800;padding:2px 7px;border-radius:10px;">⚠️ แพงกว่าตลาด</div>
           <strong style="font-size:0.88rem;">${a.name}</strong>
           ${priceBlock}
+          ${compareBlock}
           ${countdown}
-          <div style="font-size:0.68rem;color:#d97706;margin:4px 0 6px;">ราคาประมูลสูงกว่าราคาตั้งขายปกติ — ควรซื้อแบบปกติแทน</div>
           <div class="chip-rarity">${a.cardNo} • ${a.rarity}</div>
           ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;text-align:center;padding:5px;background:rgba(217,119,6,0.15);color:#d97706;border:1px solid #d97706;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;">🔍 ดูในเว็บ (ระวัง)</a>` : ''}
         </div>`;
     } else if (isDeal) {
-      const savingBaht = (a.ref - a.openPrice).toLocaleString();
       return `
         <div class="auction-chip-deal">
-          <div class="deal-badge">-${a.disc}% ต่ำกว่าตั้งขาย</div>
+          <div class="deal-badge">-${a.disc}% ถูกกว่าตลาด</div>
           <strong>${a.name}</strong>
           ${priceBlock}
+          ${compareBlock}
           ${countdown}
-          <div class="deal-saving">💰 ประหยัดได้ ~฿${savingBaht} เทียบราคาตั้งขาย</div>
           <div class="chip-rarity" style="margin-top:4px;">${a.cardNo} • ${a.rarity}</div>
           ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;text-align:center;padding:6px;background:#ef4444;color:white;border-radius:6px;font-size:0.78rem;font-weight:700;text-decoration:none;">🔨 เข้าประมูลเลย →</a>` : ''}
         </div>`;
@@ -1598,15 +1617,15 @@ function renderAuctions() {
         <div class="auction-chip">
           <strong>${a.name}</strong>
           ${priceBlock}
+          ${compareBlock}
           ${countdown}
-          ${isMild ? `<div style="font-size:0.7rem;color:#4ade80;margin-bottom:4px;">ต่ำกว่าตั้งขาย ${a.disc}%</div>` : ''}
           <div class="chip-rarity">${a.cardNo} • ${a.rarity}</div>
           ${a.url ? `<a href="${a.url}" target="_blank" rel="noopener" style="display:block;margin-top:6px;text-align:center;padding:5px;background:rgba(217,119,6,0.2);color:#fbbf24;border:1px solid #d97706;border-radius:6px;font-size:0.75rem;font-weight:600;text-decoration:none;">🔨 ดูการประมูล →</a>` : ''}
         </div>`;
     }
   }).join('');
 
-  startCountdowns();
+    startCountdowns();
 }
 
 function filterCards() {
