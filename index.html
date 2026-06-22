@@ -1276,21 +1276,28 @@ function auctionEnd(hoursFromNow) {
   return new Date(Date.now() + hoursFromNow * 3600 * 1000).toISOString();
 }
 
+// ข้อมูลจริงจาก TCGThailand — ดึงจากหน้าประมูลโดยตรง 22 มิ.ย. 2569
+// url = ลิงก์ตรงเข้าหน้าประมูลแต่ละรายการ (https://www.tcgthailand.com/auction/{uuid})
 const auctionCards = [
-  { name:"เมก้าเก็คโคกะex MUR", cardNo:"237/164", rarity:"MUR", fixedPrice:9500, openPrice:5000, marketPrice:9500, endTime: auctionEnd(11.8), url: TCG_AUCTION_URL },
-  { name:"โมรุเปโกะex SAR",     cardNo:"230/164", rarity:"SAR", fixedPrice:3200, openPrice:2200, marketPrice:3200, endTime: auctionEnd(25.3), url: TCG_AUCTION_URL },
-  { name:"เมก้าเก็คโคกะex SR",  cardNo:"193/164", rarity:"SR",  fixedPrice:2000, openPrice:777,  marketPrice:2000, endTime: auctionEnd(38.5), url: TCG_AUCTION_URL },
-  { name:"มูคุ SR",              cardNo:"222/164", rarity:"SR",  fixedPrice:1200, openPrice:600,  marketPrice:1200, endTime: auctionEnd(49.2), url: TCG_AUCTION_URL },
-  { name:"[กล่อง] เงามืดคุกคาม",cardNo:"-",       rarity:"Box", fixedPrice:2800, openPrice:1750, marketPrice:2800, endTime: auctionEnd(52.0), url: TCG_AUCTION_URL },
-  { name:"เกโคกาชิระ AR",        cardNo:"171/164", rarity:"AR",  fixedPrice:450,  openPrice:200,  marketPrice:450,  endTime: auctionEnd(7.8),  url: TCG_AUCTION_URL },
-  { name:"เคโรมัตซึ AR",         cardNo:"170/164", rarity:"AR",  fixedPrice:450,  openPrice:200,  marketPrice:450,  endTime: auctionEnd(7.9),  url: TCG_AUCTION_URL },
-  { name:"ใบแดงพิเศษ SR",        cardNo:"210/164", rarity:"SR",  fixedPrice:900,  openPrice:150,  marketPrice:900,  endTime: auctionEnd(8.0),  url: TCG_AUCTION_URL },
-  { name:"ระเบิดแรงถึงใจ SR",    cardNo:"213/164", rarity:"SR",  fixedPrice:280,  openPrice:70,   marketPrice:280,  endTime: auctionEnd(59.0), url: TCG_AUCTION_URL },
-  { name:"ฟ็อกสไล AR",           cardNo:"180/164", rarity:"AR",  fixedPrice:90,   openPrice:30,   marketPrice:90,   endTime: auctionEnd(59.5), url: TCG_AUCTION_URL },
-  { name:"เมก้าแชนเดลาex RR",   cardNo:"070/164", rarity:"RR",  fixedPrice:950,  openPrice:30,   marketPrice:950,  endTime: auctionEnd(8.1),  url: TCG_AUCTION_URL },
-  // ⚠️ ตัวอย่างประมูลที่ตั้งราคาสูงกว่าตลาด (เพื่อเตือนผู้ใช้)
-  { name:"เมก้าดาร์กไรex SAR",  cardNo:"229/164", rarity:"SAR", fixedPrice:6050, openPrice:7200, marketPrice:6050, endTime: auctionEnd(143.0),url: TCG_AUCTION_URL },
-  { name:"มิรูฮอก AR",           cardNo:"186/164", rarity:"AR",  fixedPrice:80,   openPrice:120,  marketPrice:80,   endTime: auctionEnd(167.0),url: TCG_AUCTION_URL },
+  { name:"เคโรมัตซึ",            cardNo:"170/164", rarity:"AR",  openPrice:180, fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:10:59+07:00", url:"https://www.tcgthailand.com/auction/ec14b883-405b-493c-8839-be9d59bc6a20" },
+  { name:"อชิเรน",                cardNo:"172/164", rarity:"AR",  openPrice:100, fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:11:25+07:00", url:"https://www.tcgthailand.com/auction/df81c1df-64ff-4b24-a69a-0dd9e301f5e3" },
+  { name:"ซารู้ด",                cardNo:"181/164", rarity:"AR",  openPrice:60,  fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:11:43+07:00", url:"https://www.tcgthailand.com/auction/ff2072a9-67ec-4e86-8a77-6961594ce89a" },
+  { name:"เมก้าเก็คโคกะex SR",   cardNo:"193/164", rarity:"SR",  openPrice:450, fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:12:04+07:00", url:"https://www.tcgthailand.com/auction/d6fb4f37-08f4-4956-bac7-2b9f66bbb25d" },
+  { name:"แครชแฮมเมอร์",          cardNo:"208/164", rarity:"SR",  openPrice:100, fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:12:21+07:00", url:"https://www.tcgthailand.com/auction/1893b5bc-1773-4250-8eea-6820d65461e8" },
+  { name:"กำไลแห่งความกล้า",     cardNo:"214/164", rarity:"SR",  openPrice:200, fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:12:36+07:00", url:"https://www.tcgthailand.com/auction/b3261b82-46ae-4e6f-b735-9f41fea14ab3" },
+  { name:"ซิลวาดี",               cardNo:"139/164", rarity:"R",   openPrice:4,   fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:28:45+07:00", url:"https://www.tcgthailand.com/auction/5e8aa66b-251d-465c-941c-18daecc0456a" },
+  { name:"เมก้าดรามิโดโรex",     cardNo:"126/164", rarity:"RR",  openPrice:19,  fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:29:12+07:00", url:"https://www.tcgthailand.com/auction/cce756d9-bc7a-4c18-adfc-07899e9f916e" },
+  { name:"เมก้าดรามิโดโรex",     cardNo:"126/164", rarity:"RR",  openPrice:19,  fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:29:37+07:00", url:"https://www.tcgthailand.com/auction/e73e7ac8-c931-41a0-9a08-94ee786e21a7" },
+  { name:"โทริเด็ปส์",            cardNo:"183/164", rarity:"AR",  openPrice:39,  fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:30:03+07:00", url:"https://www.tcgthailand.com/auction/86988565-fae1-44de-86db-0b338135812a" },
+  { name:"แรมพาร์ex",            cardNo:"090/164", rarity:"RR",  openPrice:9,   fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:30:25+07:00", url:"https://www.tcgthailand.com/auction/ca46d0ef-49e3-4f11-9d13-527530ea4236" },
+  { name:"พัมพ์จินex",            cardNo:"077/164", rarity:"RR",  openPrice:9,   fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:30:47+07:00", url:"https://www.tcgthailand.com/auction/d50e2f6c-ebfc-4a4e-b0bb-c7c28e1d5d3d" },
+  { name:"ไอออนเพิ่มพลังป้องกัน", cardNo:"205/164", rarity:"SR",  openPrice:59,  fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:31:10+07:00", url:"https://www.tcgthailand.com/auction/2b329c28-d764-4d9d-9f23-a5f591b75861" },
+  { name:"คาริคิริ",               cardNo:"166/164", rarity:"AR",  openPrice:39,  fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:31:37+07:00", url:"https://www.tcgthailand.com/auction/2318340e-a745-463b-95d6-2b41ac47b687" },
+  { name:"เมก้าคาเอ็นจิชิex",    cardNo:"022/164", rarity:"RR",  openPrice:19,  fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:32:01+07:00", url:"https://www.tcgthailand.com/auction/2a7cf4d5-890c-4d37-8467-d117882b4fa2" },
+  { name:"จิลาจีโนex",            cardNo:"134/164", rarity:"RR",  openPrice:9,   fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:32:35+07:00", url:"https://www.tcgthailand.com/auction/57908dfc-44bf-4249-aef3-37563365daa2" },
+  { name:"เมก้าเซราโอราex",       cardNo:"056/164", rarity:"RR",  openPrice:29,  fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:33:01+07:00", url:"https://www.tcgthailand.com/auction/8a59d86e-3545-4fd8-9a0f-9ba9ba21d610" },
+  { name:"เมก้าโดริวซึex",        cardNo:"122/164", rarity:"RR",  openPrice:29,  fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:33:40+07:00", url:"https://www.tcgthailand.com/auction/4bd4cc02-ff9b-4db9-9a39-306b2fa5a093" },
+  { name:"เมก้าเก็คโคกะex RR",   cardNo:"038/164", rarity:"RR",  openPrice:120, fixedPrice:null, marketPrice:null, endTime:"2026-06-22T21:34:02+07:00", url:"https://www.tcgthailand.com/auction/810b7bc5-7d81-435c-8e9e-6af5b8613993" },
 ];
 
 const topSellers = [
@@ -1490,7 +1497,7 @@ function startCountdowns() {
 function renderAuctions() {
   // คำนวณ discount เทียบกับ fixedPrice และเรียงลำดับ
   const enriched = auctionCards.map(a => {
-    const ref = a.fixedPrice || a.marketPrice || 0;
+    const ref = a.fixedPrice || a.marketPrice || lookupPrice(a.name) || 0;
     const disc = ref ? Math.round((1 - a.openPrice / ref) * 100) : 0;
     const isOverpriced = a.openPrice > ref && ref > 0;
     return { ...a, disc, isOverpriced, ref };
@@ -1551,10 +1558,10 @@ function renderAuctions() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0;">
         <a href="${TCG_FIXED_URL}" target="_blank" rel="noopener"
            style="background:rgba(255,255,255,0.05);border-radius:6px;padding:5px 8px;text-align:center;text-decoration:none;display:block;transition:background 0.15s;" onmouseover="this.style.background='rgba(251,191,36,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
-          <div style="font-size:0.62rem;color:#9ca3af;margin-bottom:2px;">🏷️ ตั้งขายปกติ</div>
+          <div style="font-size:0.62rem;color:#9ca3af;margin-bottom:2px;">🏷️ ราคาตลาด</div>
           <div style="font-weight:700;color:#fbbf24;font-size:0.9rem;">฿${a.ref.toLocaleString()}</div>
         </a>
-        <a href="${TCG_AUCTION_URL}" target="_blank" rel="noopener"
+        <a href="${a.url || TCG_AUCTION_URL}" target="_blank" rel="noopener"
            style="background:${a.isOverpriced?'rgba(239,68,68,0.12)':isDeal?'rgba(46,204,113,0.08)':'rgba(255,255,255,0.05)'};border:1px solid ${a.isOverpriced?'#ef4444':isDeal?'rgba(46,204,113,0.3)':'transparent'};border-radius:6px;padding:5px 8px;text-align:center;text-decoration:none;display:block;transition:background 0.15s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
           <div style="font-size:0.62rem;color:${a.isOverpriced?'#fca5a5':'#9ca3af'};margin-bottom:2px;">🔨 เปิดประมูล</div>
           <div style="font-weight:700;color:${a.isOverpriced?'#ef4444':isDeal?'#4ade80':'#fbbf24'};font-size:0.9rem;">฿${a.openPrice.toLocaleString()}</div>
