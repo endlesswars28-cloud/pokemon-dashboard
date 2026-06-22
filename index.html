@@ -1639,56 +1639,63 @@ function sortBy(col) {
 
 // ---- MARKETPLACE LINKS ----
 function mkLinks(c) {
-  const th = encodeURIComponent(c.nameTh + ' Pokemon card');
-  const thTH = encodeURIComponent(c.name + ' โปเกมอนการ์ด');
+  const q = encodeURIComponent(c.name);
+  const uuid = c.img.replace(BASE,'').split('/')[0];
   return {
-    tcg:     `https://www.tcgthailand.com/?s=${encodeURIComponent(c.nameTh)}`,
-    fb:      `https://www.facebook.com/marketplace/search/?query=${thTH}`,
-    line:    `https://line.me/R/ti/g/search`,
+    tcg:  uuid ? `https://www.tcgthailand.com/product/${uuid}` : `https://www.tcgthailand.com/?s=${encodeURIComponent(c.nameTh)}`,
+    fb1:  `https://www.facebook.com/groups/648487368297583/search/?q=${q}`,
+    fb2:  `https://www.facebook.com/groups/2253103241453431/search/?q=${q}`,
+    fb3:  `https://www.facebook.com/groups/299453794859662/search/?q=${q}`,
+    fb4:  `https://www.facebook.com/groups/PokemonTCGThailandBidding/search/?q=${q}`,
   };
 }
 
 function marketplaceBtns(c, compact = false) {
   const lk = mkLinks(c);
   if (compact) {
-    // Tiny icon strip for table rows
     return `
       <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;">
         <a href="${lk.tcg}" target="_blank" rel="noopener"
-          title="ซื้อที่ TCGThailand"
+          title="ดูราคาจริงที่ TCGThailand"
           style="background:#1a1200;border:1px solid #FFCB05;color:#FFCB05;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:5px;text-decoration:none;white-space:nowrap;">🏆 TCG</a>
-        <a href="${lk.fb}" target="_blank" rel="noopener"
-          title="ค้นหาที่ Facebook Marketplace"
+        <a href="${lk.fb1}" target="_blank" rel="noopener"
+          title="เช็คราคาในกลุ่ม Facebook"
           style="background:#061220;border:1px solid #1877f2;color:#60a5fa;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:5px;text-decoration:none;white-space:nowrap;">📘 FB</a>
       </div>`;
   }
-  // Full panel for modal
+  const fbGroups = [
+    { href: lk.fb1, label: 'เช็คราคา ซื้อขายการ์ด', sub: 'ราคากลางไทย' },
+    { href: lk.fb2, label: 'ซื้อขายแลกเปลี่ยน อิสระ', sub: 'กลุ่มพูดคุยหลัก' },
+    { href: lk.fb3, label: 'สะสมการ์ดทุกภาษา', sub: 'ซื้อ-ขาย-แลก' },
+    { href: lk.fb4, label: 'ประมูลการ์ดโปเกมอน', sub: 'TCG Thailand Bidding' },
+  ];
   return `
-    <div style="margin-top:14px;background:linear-gradient(135deg,#07111e,#0c1f36);border:1.5px solid #2563eb44;border-radius:12px;padding:14px;">
-      <div style="font-size:0.82rem;font-weight:700;color:#60a5fa;margin-bottom:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;">
-        🛒 ซื้อ / ขาย การ์ดใบนี้
+    <div style="margin-top:14px;border-radius:12px;overflow:hidden;">
+      <a href="${lk.tcg}" target="_blank" rel="noopener"
+        style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#1a1000,#2a1e00);border:1.5px solid #FFCB05;border-radius:10px;padding:11px 14px;text-decoration:none;margin-bottom:10px;transition:filter 0.15s;" onmouseover="this.style.filter='brightness(1.25)'" onmouseout="this.style.filter=''">
+        <span style="font-size:1.4rem;">🏆</span>
+        <div style="flex:1;">
+          <div style="font-size:0.82rem;font-weight:700;color:#FFCB05;">TCGThailand — ราคาอ้างอิงหลัก</div>
+          <div style="font-size:0.66rem;color:#a0804a;margin-top:2px;">ดูราคาซื้อ-ขายจริง · ฿${c.price.toLocaleString()} (ตลาด)</div>
+        </div>
+        <span style="font-size:0.8rem;color:#FFCB05;">→</span>
+      </a>
+      <div style="font-size:0.72rem;font-weight:700;color:#60a5fa;margin-bottom:7px;display:flex;align-items:center;gap:6px;">
+        📘 อ้างอิงราคากลาง — Facebook Groups <span style="font-size:0.62rem;font-weight:400;color:#555;">(ค้นหา "${c.name}" อัตโนมัติ)</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <a href="${lk.tcg}" target="_blank" rel="noopener"
-          style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1000,#2a1e00);border:1.5px solid #FFCB05;border-radius:9px;padding:10px 12px;text-decoration:none;transition:filter 0.15s;" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter=''">
-          <span style="font-size:1.3rem;">🏆</span>
-          <div>
-            <div style="font-size:0.78rem;font-weight:700;color:#FFCB05;">TCGThailand</div>
-            <div style="font-size:0.65rem;color:#a0804a;">ตั้งขาย ฿${c.price.toLocaleString()}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+        ${fbGroups.map(g => `
+        <a href="${g.href}" target="_blank" rel="noopener"
+          style="display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#030f1e,#061528);border:1px solid #1877f244;border-radius:8px;padding:8px 10px;text-decoration:none;transition:border-color 0.15s;" onmouseover="this.style.borderColor='#1877f2'" onmouseout="this.style.borderColor='#1877f244'">
+          <span style="font-size:1rem;">📘</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:0.7rem;font-weight:700;color:#60a5fa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.label}</div>
+            <div style="font-size:0.6rem;color:#3a6090;">${g.sub}</div>
           </div>
-          <span style="margin-left:auto;font-size:0.7rem;color:#FFCB05;">→</span>
-        </a>
-        <a href="${lk.fb}" target="_blank" rel="noopener"
-          style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#030f1e,#061528);border:1.5px solid #1877f2;border-radius:9px;padding:10px 12px;text-decoration:none;transition:filter 0.15s;" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter=''">
-          <span style="font-size:1.3rem;">📘</span>
-          <div>
-            <div style="font-size:0.78rem;font-weight:700;color:#60a5fa;">Facebook Group</div>
-            <div style="font-size:0.65rem;color:#3a6090;">ต่อรองได้ −10–15%</div>
-          </div>
-          <span style="margin-left:auto;font-size:0.7rem;color:#60a5fa;">→</span>
-        </a>
+          <span style="font-size:0.65rem;color:#1877f2;flex-shrink:0;">→</span>
+        </a>`).join('')}
       </div>
-      <div style="font-size:0.68rem;color:#444;text-align:center;margin-top:10px;">ลิ้งค์จะค้นหาชื่อ "${c.nameTh}" ในแต่ละแพลตฟอร์มโดยอัตโนมัติ</div>
+      <div style="font-size:0.63rem;color:#444;text-align:center;margin-top:8px;">กดที่กลุ่มเพื่อดูโพสต์ซื้อ-ขายของการ์ดใบนี้โดยตรง</div>
     </div>`;
 }
 
