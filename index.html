@@ -1710,6 +1710,7 @@ function showCard(id) {
     ${livePrices[c.id] != null ? `<div class="modal-row"><span>ราคา TCGPlayer (USD)</span><span style="color:#60a5fa;font-weight:700;">$${livePrices[c.id].toFixed(2)}</span></div>` : ''}
     <div class="modal-row"><span>เทรนด์ราคา</span><span class="${c.trend.startsWith('+')?'trend-up':c.trend.startsWith('-')?'trend-down':'trend-flat'}">${c.trend.startsWith('+')?'↑':c.trend.startsWith('-')?'↓':'→'} ${c.trend}</span></div>
     <div class="modal-row"><span>ยอดขาย (ประมาณ)</span><span>${c.sold} ใบ</span></div>
+    ${(()=>{ const uuid = c.img.replace(BASE,"").split("/")[0]; return uuid ? `<a href="https://www.tcgthailand.com/product/${uuid}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0 4px;padding:10px 14px;background:rgba(255,203,5,0.1);border:1.5px solid rgba(255,203,5,0.35);border-radius:10px;color:#fbbf24;font-weight:700;font-size:0.88rem;text-decoration:none;" onmouseover="this.style.background='rgba(255,203,5,0.2)'" onmouseout="this.style.background='rgba(255,203,5,0.1)'">🔗 ดูราคาจริงบน TCGThailand<span style="font-size:0.7rem;font-weight:400;color:#9ca3af;margin-left:6px;">(อ้างอิงราคาตลาด)</span></a>` : "";})()}
     ${marketplaceBtns(c)}
     <div style="margin-top:10px;font-size:0.75rem;color:var(--muted);text-align:center">ราคาอ้างอิงจาก TCGThailand.com • เซต เงามืดคุกคาม</div>
   `;
