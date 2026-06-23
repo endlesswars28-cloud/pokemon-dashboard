@@ -155,7 +155,7 @@ async function main() {
   // บันทึก prices.json
   writeFileSync(PRICES_FILE, JSON.stringify(results, null, 2), 'utf8');
 
-  const updated = results.filter(r => newPrice !== null).length;
+  const updated = results.filter(r => r.price > 0).length;
   console.log('='.repeat(50));
   console.log(`✅ บันทึก prices.json แล้ว (${results.length} การ์ด, อัพเดทราคาใหม่ ${updated} ใบ)`);
 }
